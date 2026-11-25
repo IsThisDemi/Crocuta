@@ -1,0 +1,31 @@
+// La libreria nativa non sta nel repository: arriva da Maven, la build
+// ufficiale di Microsoft alla stessa versione del Mac (1.30). I binding Dart
+// la aprono per nome (libonnxruntime.so), e Android la trova dentro l'APK.
+
+group 'com.gtbluesky.onnxruntime'
+version '1.0'
+
+apply plugin: 'com.android.library'
+
+android {
+    namespace 'com.gtbluesky.onnxruntime'
+    compileSdk 36
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    defaultConfig {
+        minSdk 24
+    }
+}
+
+repositories {
+    google()
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.30.0'
+}

@@ -1,0 +1,69 @@
+name: yeen_music
+description: "Crocuta — lettore musicale che cerca su YouTube Music ed estrae solo l'audio."
+publish_to: 'none'
+version: 1.1.0+2
+
+environment:
+  sdk: ^3.11.3
+
+dependencies:
+  bonsoir: ^7.1.5
+  crypto: ^3.0.7
+  ffi: ^2.2.0
+  fftea: ^1.5.0+1
+  flutter:
+    sdk: flutter
+  flutter_inappwebview: ^6.1.5
+  flutter_riverpod: ^2.6.1
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  http: ^1.6.0
+  liquid_glass_widgets: ^1.7.0
+  media_kit: ^1.2.6
+  media_kit_libs_video: ^1.0.7
+  media_kit_video: ^2.0.1
+  onnxruntime: ^1.4.1
+  path_provider: ^2.1.6
+  share_plus: ^13.3.0
+  speech_to_text: ^7.5.0
+  youtube_explode_dart: ^3.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/pot_bundle.js
+    # Il modello che separa voce e base per AutoMix: fuori da git, lo
+    # scarica tool/fetch_models.sh (lo chiamano gli script di build).
+    - assets/models/voc_ft.onnx
+    - assets/models/beat_this.onnx
+
+  # Font variabili impacchettati: due file coprono tutti i pesi. Sono
+  # inclusi negli asset invece di essere scaricati a runtime, così il
+  # primo avvio non lampeggia col font di fallback e il rendering del
+  # testo non dipende dalla rete.
+  fonts:
+    - family: Outfit
+      fonts:
+        - asset: assets/fonts/Outfit-Variable.ttf
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Variable.ttf
+
+# libmpv ricompilato con i filtri audio di ffmpeg (volume, highpass,
+# ebur128, alimiter, atempo...): quello di media_kit ha solo equalizer.
+# Vedi tool/build_libmpv.sh.
+dependency_overrides:
+  onnxruntime:
+    path: third_party/onnxruntime
+  media_kit_libs_macos_video:
+    path: third_party/media_kit_libs_macos_video
+  media_kit_libs_ios_video:
+    path: third_party/media_kit_libs_ios_video

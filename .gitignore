@@ -1,0 +1,59 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Il template Flutter lascia questa riga commentata perche' .vscode puo'
+# contenere configurazioni utili da versionare. Qui dentro c'e' solo il
+# percorso assoluto di questa macchina, scritto dall'estensione CMake: su
+# un altro computer sarebbe sbagliato.
+.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Il .env porta l'indirizzo e il segreto della sincronizzazione: resta
+# locale. Il modello da copiare e' .env.example, che e' versionato.
+.env
+
+# Copia dello script Apps Script con il segreto gia' dentro, pronta da
+# incollare. Il modello versionato e' tool/yeen_sync.gs, col segnaposto.
+yeen_sync.local.gs
+.playwright-mcp/
+assets/models/
+
+# ONNX Runtime per il Mac: 42 MB, lo scarica tool/fetch_models.sh.
+third_party/onnxruntime/macos/*.dylib

@@ -1,0 +1,50 @@
+{
+  "fill": {
+    "linear-gradient": [
+      "srgb:0.37647,0.19608,0.07843,1.00000",
+      "srgb:0.10980,0.05490,0.03137,1.00000"
+    ]
+  },
+  "groups": [
+    {
+      "name": "Spots",
+      "layers": [
+        {
+          "name": "spots",
+          "image-name": "spots.svg",
+          "glass": true
+        }
+      ],
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.5
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.25
+      },
+      "specular": true
+    },
+    {
+      "name": "Under",
+      "layers": [
+        {
+          "name": "under",
+          "image-name": "under.svg",
+          "glass": true
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.35
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.45
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared"
+  }
+}

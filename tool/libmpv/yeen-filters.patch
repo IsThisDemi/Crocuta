@@ -1,0 +1,335 @@
+diff --git a/compat/sincosf.h b/compat/sincosf.h
+new file mode 100644
+index 0000000..4db1c6d
+--- /dev/null
++++ b/compat/sincosf.h
+@@ -0,0 +1,6 @@
++/* Xcode 26: math.h non dichiara piu' sincosf, ma solo __sincosf, e
++ * harfbuzz 8.1 la usa quando meson la trova in libm. */
++#if defined(__APPLE__) && defined(__cplusplus)
++#include <math.h>
++static inline void sincosf(float x, float *s, float *c) { __sincosf(x, s, c); }
++#endif
+diff --git a/cross-files/ios-arm64.ini b/cross-files/ios-arm64.ini
+index e9b146c..0f5afe5 100644
+--- a/cross-files/ios-arm64.ini
++++ b/cross-files/ios-arm64.ini
+@@ -13,10 +13,11 @@ nm = ['nm']
+ ar = ['ar']
+ strip = ['strip']
+ pkgconfig = ['pkg-config']
++cmake = ['cmake']
+ 
+ [built-in options]
+-c_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=9.0']
+-cpp_args = ['-stdlib=libc++', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=9.0']
++c_args = ['-Wno-int-conversion', '-Wno-incompatible-function-pointer-types', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=9.0']
++cpp_args = ['-include', '@WORK@/compat/sincosf.h', '-stdlib=libc++', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=9.0']
+ objc_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=9.0']
+ objcpp_args = ['-stdlib=libc++', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=9.0']
+ c_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=9.0']
+@@ -26,3 +27,11 @@ objcpp_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Cont
+ 
+ [properties]
+ cmake_osx_sysroot = '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk'
++
++# cmake 4 / meson 1.12: meson cerca le dipendenze anche con cmake, e cmake
++# senza sapere che il bersaglio e' iOS restituiva la zlib e gli header
++# dell'SDK del Mac — il linker poi rifiutava "built for macOS".
++[cmake]
++CMAKE_SYSTEM_NAME = 'iOS'
++CMAKE_OSX_SYSROOT = '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk'
++CMAKE_OSX_ARCHITECTURES = 'arm64'
+diff --git a/cross-files/iossimulator-amd64.ini b/cross-files/iossimulator-amd64.ini
+index 462c831..d88f313 100644
+--- a/cross-files/iossimulator-amd64.ini
++++ b/cross-files/iossimulator-amd64.ini
+@@ -13,16 +13,25 @@ nm = ['nm']
+ ar = ['ar']
+ strip = ['strip']
+ pkgconfig = ['pkg-config']
++cmake = ['cmake']
+ 
+ [built-in options]
+-c_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=9.0']
+-cpp_args = ['-stdlib=libc++', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=9.0']
+-objc_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=9.0']
+-objcpp_args = ['-stdlib=libc++', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=9.0']
+-c_link_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=9.0']
+-cpp_link_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=9.0']
+-objc_link_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=9.0']
+-objcpp_link_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=9.0']
++c_args = ['-Wno-int-conversion', '-Wno-incompatible-function-pointer-types', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=9.0']
++cpp_args = ['-include', '@WORK@/compat/sincosf.h', '-stdlib=libc++', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=9.0']
++objc_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=9.0']
++objcpp_args = ['-stdlib=libc++', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=9.0']
++c_link_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=9.0']
++cpp_link_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=9.0']
++objc_link_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=9.0']
++objcpp_link_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=9.0']
+ 
+ [properties]
+ cmake_osx_sysroot = '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk'
++
++# cmake 4 / meson 1.12: meson cerca le dipendenze anche con cmake, e cmake
++# senza sapere che il bersaglio e' iOS restituiva la zlib e gli header
++# dell'SDK del Mac — il linker poi rifiutava "built for macOS".
++[cmake]
++CMAKE_SYSTEM_NAME = 'iOS'
++CMAKE_OSX_SYSROOT = '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk'
++CMAKE_OSX_ARCHITECTURES = 'x86_64'
+diff --git a/cross-files/iossimulator-arm64.ini b/cross-files/iossimulator-arm64.ini
+index a4bd31b..96dcf42 100644
+--- a/cross-files/iossimulator-arm64.ini
++++ b/cross-files/iossimulator-arm64.ini
+@@ -13,16 +13,25 @@ nm = ['nm']
+ ar = ['ar']
+ strip = ['strip']
+ pkgconfig = ['pkg-config']
++cmake = ['cmake']
+ 
+ [built-in options]
+-c_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=12.0']
+-cpp_args = ['-stdlib=libc++', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=12.0']
+-objc_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=12.0']
+-objcpp_args = ['-stdlib=libc++', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=12.0']
+-c_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=12.0']
+-cpp_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=12.0']
+-objc_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=12.0']
+-objcpp_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-miphoneos-version-min=12.0']
++c_args = ['-Wno-int-conversion', '-Wno-incompatible-function-pointer-types', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=12.0']
++cpp_args = ['-include', '@WORK@/compat/sincosf.h', '-stdlib=libc++', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=12.0']
++objc_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=12.0']
++objcpp_args = ['-stdlib=libc++', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=12.0']
++c_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=12.0']
++cpp_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=12.0']
++objc_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=12.0']
++objcpp_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk', '-mios-simulator-version-min=12.0']
+ 
+ [properties]
+ cmake_osx_sysroot = '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk'
++
++# cmake 4 / meson 1.12: meson cerca le dipendenze anche con cmake, e cmake
++# senza sapere che il bersaglio e' iOS restituiva la zlib e gli header
++# dell'SDK del Mac — il linker poi rifiutava "built for macOS".
++[cmake]
++CMAKE_SYSTEM_NAME = 'iOS'
++CMAKE_OSX_SYSROOT = '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk'
++CMAKE_OSX_ARCHITECTURES = 'arm64'
+diff --git a/cross-files/macos-amd64.ini b/cross-files/macos-amd64.ini
+index 833b5de..a52a874 100644
+--- a/cross-files/macos-amd64.ini
++++ b/cross-files/macos-amd64.ini
+@@ -13,10 +13,11 @@ nm = ['nm']
+ ar = ['ar']
+ strip = ['strip']
+ pkgconfig = ['pkg-config']
++cmake = ['cmake']
+ 
+ [built-in options]
+-c_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
+-cpp_args = ['-stdlib=libc++', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
++c_args = ['-Wno-int-conversion', '-Wno-incompatible-function-pointer-types', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
++cpp_args = ['-include', '@WORK@/compat/sincosf.h', '-stdlib=libc++', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
+ objc_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
+ objcpp_args = ['-stdlib=libc++', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
+ c_link_args = ['-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
+diff --git a/cross-files/macos-arm64.ini b/cross-files/macos-arm64.ini
+index 3617015..80148d1 100644
+--- a/cross-files/macos-arm64.ini
++++ b/cross-files/macos-arm64.ini
+@@ -13,10 +13,11 @@ nm = ['nm']
+ ar = ['ar']
+ strip = ['strip']
+ pkgconfig = ['pkg-config']
++cmake = ['cmake']
+ 
+ [built-in options]
+-c_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
+-cpp_args = ['-stdlib=libc++', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
++c_args = ['-Wno-int-conversion', '-Wno-incompatible-function-pointer-types', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
++cpp_args = ['-include', '@WORK@/compat/sincosf.h', '-stdlib=libc++', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
+ objc_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
+ objcpp_args = ['-stdlib=libc++', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
+ c_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk', '-mmacosx-version-min=10.9']
+diff --git a/patches/mpv-keep-audio-session.patch b/patches/mpv-keep-audio-session.patch
+new file mode 100644
+index 0000000..49c31c3
+--- /dev/null
++++ b/patches/mpv-keep-audio-session.patch
+@@ -0,0 +1,17 @@
++--- a/audio/out/ao_audiounit.m	2026-09-25 08:45:48
+++++ b/audio/out/ao_audiounit.m	2026-09-25 08:45:48
++@@ -230,10 +230,10 @@
++     AudioUnitUninitialize(p->audio_unit);
++     AudioComponentInstanceDispose(p->audio_unit);
++ 
++-    [AVAudioSession.sharedInstance
++-        setActive:NO
++-        withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
++-        error:nil];
+++    // Crocuta: la sessione audio e' una sola per tutta l'app, e con piu'
+++    // player (AutoMix) chiudere l'uscita di uno la disattivava mentre gli
+++    // altri suonavano, avvisando pure il sistema: CarPlay rispondeva con
+++    // una pausa. Un'app musicale non rilascia la sessione mentre suona.
++ }
++ 
++ static int init(struct ao *ao)
+diff --git a/scripts/ffmpeg/meson.build b/scripts/ffmpeg/meson.build
+index aa3831e..6f32d71 100644
+--- a/scripts/ffmpeg/meson.build
++++ b/scripts/ffmpeg/meson.build
+@@ -11,7 +11,7 @@ objc = meson.get_compiler('objc')
+ nm = find_program('nm')
+ ar = find_program('ar')
+ strip = find_program('strip')
+-pkg_config = find_program('pkgconfig')
++pkg_config = find_program('pkg-config')
+ 
+ # build options
+ c_args = get_option('c_args')
+@@ -166,6 +166,28 @@ audio_default_options = [
+     # filters
+     '--enable-filter=overlay',
+     '--enable-filter=equalizer',
++    # Yeen Music: i filtri audio per AutoMix, preamp e analisi.
++    '--enable-filter=volume',
++    '--enable-filter=highpass',
++    '--enable-filter=lowpass',
++    '--enable-filter=bass',
++    '--enable-filter=treble',
++    '--enable-filter=lowshelf',
++    '--enable-filter=highshelf',
++    '--enable-filter=biquad',
++    '--enable-filter=ebur128',
++    '--enable-filter=silencedetect',
++    '--enable-filter=silenceremove',
++    '--enable-filter=astats',
++    '--enable-filter=loudnorm',
++    '--enable-filter=dynaudnorm',
++    '--enable-filter=alimiter',
++    '--enable-filter=acompressor',
++    '--enable-filter=atempo',
++    '--enable-filter=afade',
++    '--enable-filter=aformat',
++    '--enable-filter=anull',
++    '--enable-filter=aresample',
+ ]
+ 
+ # https://github.com/media-kit/libmpv-android-video-build/blob/7353af784df9bab3256acd8d90f208024d16ab96/buildscripts/flavors/default.sh
+diff --git a/scripts/freetype/build.sh b/scripts/freetype/build.sh
+index 175ad59..2e4a655 100644
+--- a/scripts/freetype/build.sh
++++ b/scripts/freetype/build.sh
+@@ -11,8 +11,10 @@ meson setup build \
+     -Dbzip2=disabled \
+     -Dharfbuzz=enabled \
+     -Dmmap=disabled \
+-    -Dpng=enabled \
++    -Dpng=disabled `# libpng 1.6.40 cerca fp.h con l SDK di Xcode 26` \
+     -Dtests=disabled \
+-    -Dzlib=enabled
++    `# iOS: la zlib di sistema viene cercata nell'SDK del Mac; quella interna` \
++    `# di freetype non dipende da niente.` \
++    -Dzlib=$( [ "${OS}" = macos ] && echo enabled || echo internal )
+ meson compile -C build
+ meson install -C build
+diff --git a/scripts/harfbuzz/build.sh b/scripts/harfbuzz/build.sh
+index 0898230..68bd120 100644
+--- a/scripts/harfbuzz/build.sh
++++ b/scripts/harfbuzz/build.sh
+@@ -17,7 +17,9 @@ meson setup build \
+     -Dfreetype=disabled \
+     -Dgdi=disabled \
+     -Ddirectwrite=disabled \
+-    -Dcoretext=enabled \
++    `# iOS con Xcode 26: il linker non trova CoreText per harfbuzz; serve solo` \
++    `# a impaginare i sottotitoli, e su macOS resta com'era.` \
++    -Dcoretext=$( [ "${OS}" = macos ] && echo enabled || echo disabled ) \
+     -Dtests=disabled \
+     -Dintrospection=disabled \
+     -Ddocs=disabled \
+diff --git a/scripts/mbedtls/build.sh b/scripts/mbedtls/build.sh
+index 05efd94..f90196e 100644
+--- a/scripts/mbedtls/build.sh
++++ b/scripts/mbedtls/build.sh
+@@ -22,6 +22,13 @@ cp -R subprojects/mbedtls/include/mbedtls/*.h dist/include/mbedtls
+ cp -R subprojects/mbedtls/include/psa/*.h dist/include/psa
+ ## install libs
+ find . -type f -name '*.dylib' -exec sh -c 'mv {} dist/lib' \;
++## cmake 4: il file vero e' libmbedtls.19.dylib e libmbedtls.dylib e' solo un
++## collegamento, che il find sopra non sposta. Senza, il linker non trova
++## -lmbedtls e ffmpeg dice "mbedTLS not found".
++for LIB in dist/lib/lib*.[0-9]*.dylib; do
++    BASE=$(basename "$LIB" | sed -E 's/\.[0-9]+\.dylib$/.dylib/')
++    [ -e "dist/lib/$BASE" ] || ln -s "$(basename "$LIB")" "dist/lib/$BASE"
++done
+ ## install pkgconfig file
+ cp ${PROJECT_DIR}/scripts/mbedtls/mbedtls.pc.in dist/lib/pkgconfig/mbedtls.pc
+ sed -i '' 's|${PREFIX}|'${OUTPUT_DIR}'|g' dist/lib/pkgconfig/mbedtls.pc
+diff --git a/scripts/mbedtls/meson.build b/scripts/mbedtls/meson.build
+index 640c8d1..9522589 100644
+--- a/scripts/mbedtls/meson.build
++++ b/scripts/mbedtls/meson.build
+@@ -13,6 +13,10 @@ endif
+ 
+ options = cmake.subproject_options()
+ options.add_cmake_defines({
++    # cmake 4 non accetta piu' progetti dichiarati per versioni < 3.5.
++    'CMAKE_POLICY_VERSION_MINIMUM': '3.5',
++    # Release: in Debug uchardet si da' versione "0.0.8.debug", che meson rifiuta.
++    'CMAKE_BUILD_TYPE': 'Release',
+     'CMAKE_OSX_ARCHITECTURES': arch,
+     'CMAKE_OSX_SYSROOT': meson.get_cross_property('cmake_osx_sysroot'),
+     'USE_STATIC_MBEDTLS_LIBRARY': false,
+diff --git a/scripts/mpv/build.sh b/scripts/mpv/build.sh
+index ce9ba20..285cff0 100644
+--- a/scripts/mpv/build.sh
++++ b/scripts/mpv/build.sh
+@@ -6,6 +6,7 @@ set -u # treat unset variables as an error
+ cd ${SRC_DIR}
+ 
+ patch -p1 <${PROJECT_DIR}/patches/mpv-fix-missing-objc.patch
++patch -p1 <${PROJECT_DIR}/patches/mpv-keep-audio-session.patch
+ if [ "${VARIANT}" == "audio" ]; then
+     patch -p1 <${PROJECT_DIR}/patches/mpv-remove-libass.patch
+ fi
+diff --git a/scripts/uchardet/build.sh b/scripts/uchardet/build.sh
+index c407333..561cd18 100644
+--- a/scripts/uchardet/build.sh
++++ b/scripts/uchardet/build.sh
+@@ -10,13 +10,15 @@ cp ${PROJECT_DIR}/scripts/uchardet/meson.build ./meson.build
+ meson setup build_cross \
+     --cross-file ${PROJECT_DIR}/cross-files/${OS}-${ARCH}.ini \
+     --prefix="${OUTPUT_DIR}"
+-meson compile -C build_cross uchardet
++meson compile -C build_cross  # solo la libreria: il programma e' spento (BUILD_BINARY)
+ 
+ # TODO: don't build twice, see what's done for mbetls
+ # native build with cmake
+ cmake ./subprojects/uchardet \
+     -B build_native \
+     -DCMAKE_INSTALL_PREFIX="${OUTPUT_DIR}" \
++    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
++    -DCMAKE_BUILD_TYPE=Release \
+     -DBUILD_STATIC=OFF
+ make -C build_native
+ DESTDIR=$PWD/dist make -C build_native install
+diff --git a/scripts/uchardet/meson.build b/scripts/uchardet/meson.build
+index a7ca18a..5b5afaa 100644
+--- a/scripts/uchardet/meson.build
++++ b/scripts/uchardet/meson.build
+@@ -13,6 +13,13 @@ endif
+ 
+ options = cmake.subproject_options()
+ options.add_cmake_defines({
++    # cmake 4 non accetta piu' progetti dichiarati per versioni < 3.5.
++    'CMAKE_POLICY_VERSION_MINIMUM': '3.5',
++    # Release: in Debug uchardet si da' versione "0.0.8.debug", che meson rifiuta.
++    'CMAKE_BUILD_TYPE': 'Release',
++    # Solo la libreria: il programma da riga di comando, con cmake che sa di
++    # compilare per iOS, diventa un'app e non si installa.
++    'BUILD_BINARY': false,
+     'CMAKE_OSX_ARCHITECTURES': arch,
+     'CMAKE_OSX_SYSROOT': meson.get_cross_property('cmake_osx_sysroot'),
+     'BUILD_STATIC': false,
