@@ -78,7 +78,10 @@ class MediaCard extends StatelessWidget {
               SpotMotionBuilder(
                 builder: (context, t) => PressableArtwork(
                   state: state,
-                  shape: shape.copyWith(time: t),
+                  shape: shape.copyWith(
+                    time: t,
+                    music: SpotMotion.musicOf(context),
+                  ),
                   child: SizedBox.square(
                     dimension: width,
                     child: Spot(

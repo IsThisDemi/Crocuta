@@ -18,6 +18,36 @@ enum MiniPlayerLayout {
   static func height(forWidth width: CGFloat) -> CGFloat { width }
 }
 
+/// La musica in un istante, per la macchia: e' `SpotMusic` di
+/// lib/design/spot.dart. Tutti 0-2 (lo slider delle Impostazioni arriva al
+/// doppio): [pulse] i colpi di basso, [snap] quelli di rullante, [energy]
+/// quanto e' pieno il tratto.
+struct SpotMusic {
+  var pulse: Double = 0
+  var snap: Double = 0
+  var energy: Double = 0
+  static let silent = SpotMusic()
+}
+
+/// La musica di tutto il brano, come la manda Dart (MiniPlayerWindow.setMusic):
+/// [rate] valori al secondo dal secondo zero.
+struct SpotMusicTrack {
+  let rate: Double
+  let pulse: [Float]
+  let snap: [Float]
+  let energy: [Float]
+
+  func at(_ t: Double) -> SpotMusic {
+    let n = pulse.count
+    guard n > 1, snap.count == n, energy.count == n else { return .silent }
+    let p = min(max(t * rate, 0), Double(n - 1))
+    let i = min(Int(p), n - 2)
+    let k = p - Double(i)
+    func lerp(_ x: [Float]) -> Double { Double(x[i]) * (1 - k) + Double(x[i + 1]) * k }
+    return SpotMusic(pulse: lerp(pulse), snap: lerp(snap), energy: lerp(energy))
+  }
+}
+
 enum MiniPlayerAction {
   case togglePlay, next, previous, close, expand
   case seek(Double)
@@ -48,6 +78,23 @@ final class MiniPlayerModel: ObservableObject {
   // elapsedPlaybackTime + rate.
   @Published private(set) var anchorPosition: Double = 0
   @Published private(set) var anchorDate = Date()
+
+  /// La musica del brano in ascolto, e quanto conta (lo slider delle
+  /// Impostazioni). Niente @Published: la legge la vista a ogni
+  /// fotogramma, non serve ridisegnare quando arriva.
+  var music: SpotMusicTrack?
+  var musicIntensity: Double = 1
+
+  /// La musica alla posizione del brano adesso: niente in pausa.
+  func music(at date: Date) -> SpotMusic {
+    guard playing, musicIntensity > 0, let music else { return .silent }
+    let m = music.at(position(at: date))
+    let k = musicIntensity
+    return SpotMusic(pulse: m.pulse * k, snap: m.snap * k, energy: m.energy * k)
+  }
+
+  /// C'e' musica da seguire: la macchia va a sessanta fotogrammi.
+  var followsMusic: Bool { playing && musicIntensity > 0 && music != nil }
 
   var perform: (MiniPlayerAction) -> Void = { _ in }
 
@@ -121,8 +168,9 @@ struct MiniPlayerView: View {
 
   /// I secondi passati col mini player in vista: nascosto si ferma, e la
   /// macchia riparte dalla posa in cui era invece di saltare.
-  private func liveTime(at date: Date) -> Double {
-    MiniPlayerClock.shared.time(at: date, running: model.visible && !reduceMotion)
+  private func liveTime(at date: Date, speed: Double) -> Double {
+    MiniPlayerClock.shared.time(
+      at: date, running: model.visible && !reduceMotion, speed: speed)
   }
 
   var body: some View {
@@ -133,12 +181,23 @@ struct MiniPlayerView: View {
       // La macchia respira sempre, come tutte quelle dell'app: un
       // fotogramma ogni 1/30 di secondo basta a un movimento cosi' lento, e
       // nascosta o col movimento ridotto l'orologio si ferma dov'e'.
+      // Con la musica come nell'app (SpotMotionHost): i colpi di basso la
+      // fanno crescere, il tratto pieno corre l'orologio fino a quattro
+      // volte; e sessanta fotogrammi, perche' un colpo dura un decimo di
+      // secondo.
       TimelineView(
-        .animation(minimumInterval: 1.0 / 30, paused: !model.visible || reduceMotion)
+        .animation(
+          minimumInterval: model.followsMusic ? 1.0 / 60 : 1.0 / 30,
+          paused: !model.visible || reduceMotion)
       ) { context in
+      let music = reduceMotion ? SpotMusic.silent : model.music(at: context.date)
       let shape = SpotShape(
         seed: model.spotSeed.isEmpty ? "crocuta" : model.spotSeed,
-        time: liveTime(at: context.date))
+        time: liveTime(at: context.date, speed: 1 + 3 * music.energy),
+        music: music)
+      // Crescere fino al margine della finestra e non oltre: fuori dalla
+      // finestra la macchia si taglierebbe.
+      let swell = min(1 + 0.075 * min(music.pulse, 2), 1 / (1 - 2 * MiniPlayerLayout.inset))
       ZStack {
         // Sotto a tutto, larga quanto la finestra: dove non c'e' un comando
         // si trascina. Dentro la macchia ritagliata la vista AppKit non
@@ -179,6 +238,7 @@ struct MiniPlayerView: View {
         .contentShape(shape)
         .clipShape(shape)
         .overlay(shape.stroke(.white.opacity(0.12), lineWidth: 0.7).allowsHitTesting(false))
+        .scaleEffect(swell)
         .position(x: side / 2, y: side / 2)
       }
       .frame(width: geo.size.width, height: geo.size.height)
@@ -503,6 +563,10 @@ struct SpotShape: Shape {
   /// suo ritmo, come `spotPath(time:)` in lib/design/spot.dart. Senza, la
   /// forma e' ferma.
   var time: Double? = nil
+  /// La musica in ascolto, come `spotPath(music:)`: i colpi di basso e di
+  /// rullante deformano lobi diversi, il tratto pieno allarga il respiro.
+  /// Gli stessi numeri, tirati nello stesso ordine.
+  var music: SpotMusic = .silent
 
   func path(in rect: CGRect) -> Path {
     var rnd = SpotRandom(seed: SpotRandom.seed(seed))
@@ -518,12 +582,22 @@ struct SpotShape: Shape {
     }
     if let time {
       let amp = max(w, 0.5)
+      let breath = amp * (1 + 1.5 * min(max(music.energy, 0), 2))
       for i in 0..<n {
         let phase = rnd.nextDouble() * 2 * Double.pi
         let freq = 0.55 + rnd.nextDouble() * 0.5
         func wave(_ f: Double, _ ph: Double) -> Double { sin(time * f + ph) - sin(ph) }
-        radii[i] *= 1 + 0.065 * amp * wave(freq, phase)
-        angles[i] += 0.09 * amp * wave(freq * 0.73, phase * 1.7)
+        radii[i] *= 1 + 0.065 * breath * wave(freq, phase)
+        angles[i] += 0.09 * breath * wave(freq * 0.73, phase * 1.7)
+      }
+      let bass = min(max(music.pulse, 0), 2)
+      let snap = min(max(music.snap, 0), 2)
+      for i in 0..<n {
+        let kick = rnd.nextDouble() * 2 - 0.7
+        let tick = rnd.nextDouble() * 2 - 1
+        if bass == 0 && snap == 0 { continue }
+        radii[i] *= 1 + amp * (0.16 * bass * kick + 0.09 * snap * tick)
+        angles[i] += amp * (0.05 * bass * kick + 0.06 * snap * tick)
       }
     }
     let pts = (0..<n).map { CGPoint(x: cos(angles[$0]) * radii[$0], y: sin(angles[$0]) * radii[$0]) }
@@ -665,13 +739,19 @@ final class MiniPlayerClock {
   private var accumulated: Double = 0
   private var runningSince: Date?
 
-  func time(at date: Date, running: Bool) -> Double {
+  /// [speed] e' quanto corre adesso: fino a quattro volte nei tratti
+  /// pieni. Si somma passo per passo, cosi' cambiare velocita' non fa
+  /// saltare la macchia.
+  func time(at date: Date, running: Bool, speed: Double = 1) -> Double {
     if running {
-      if runningSince == nil { runningSince = date }
-      return accumulated + date.timeIntervalSince(runningSince!)
+      if let since = runningSince {
+        accumulated += max(date.timeIntervalSince(since), 0) * speed
+      }
+      runningSince = date
+      return accumulated
     }
     if let since = runningSince {
-      accumulated += date.timeIntervalSince(since)
+      accumulated += max(date.timeIntervalSince(since), 0) * speed
       runningSince = nil
     }
     return accumulated

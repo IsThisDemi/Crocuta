@@ -262,7 +262,12 @@ class _Placeholder extends StatelessWidget {
         builder: (context, t) => DecoratedBox(
           decoration: ShapeDecoration(
             color: color.withValues(alpha: 0.5),
-            shape: SpotBorder(seed: seed, wobble: 0.8, time: t),
+            shape: SpotBorder(
+              seed: seed,
+              wobble: 0.8,
+              time: t,
+              music: SpotMotion.musicOf(context),
+            ),
           ),
         ),
       ),

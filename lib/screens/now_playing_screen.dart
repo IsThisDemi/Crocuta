@@ -1040,7 +1040,12 @@ class _PaneKeyState extends State<_PaneKey> {
         height: _size,
         decoration: ShapeDecoration(
           color: fill,
-          shape: SpotBorder(seed: 'pane-${w.label}', wobble: 0.8, time: t),
+          shape: SpotBorder(
+            seed: 'pane-${w.label}',
+            wobble: 0.8,
+            time: t,
+            music: SpotMotion.musicOf(context),
+          ),
         ),
         alignment: Alignment.center,
         child: w.airplay
@@ -1157,6 +1162,7 @@ class _ToggleState extends State<_Toggle> {
                         seed: 'toggle-${widget.icon.codePoint}',
                         wobble: 0.8,
                         time: SpotMotion.of(context)?.value,
+                        music: SpotMotion.musicOf(context),
                       ),
                       color: widget.progress != null
                           ? Colors.white.withValues(alpha: 0.06)

@@ -63,6 +63,19 @@ class BeatGrid {
   static const int featureDims = 4;
   static const double featureRate = 2;
 
+  /// L'inviluppo per le macchie che pulsano con la musica, come un
+  /// visualizzatore: [envelopeRate] fotogrammi al secondo, e per ognuno
+  /// [envelopeDims] valori — il picco dei bassi (sotto i 150 Hz) in dB, e
+  /// quanto sono fitti gli attacchi sopra i 150 Hz (rullante, charleston,
+  /// voce), in dB anche lui. Trenta al secondo per prendere ogni colpo di
+  /// cassa al suo posto. Non sta nel json salvato con la griglia ma in un
+  /// file suo (vedi TrackAnalyzer.envelopeFor): sono una decina di
+  /// kilobyte a brano, e la scatola delle griglie sta tutta in memoria.
+  final List<double> envelope;
+
+  static const int envelopeDims = 2;
+  static const double envelopeRate = 30;
+
   const BeatGrid({
     required this.bpm,
     required this.firstBeat,
@@ -75,6 +88,7 @@ class BeatGrid {
     this.ending,
     this.version = 1,
     this.features = const [],
+    this.envelope = const [],
   });
 
   BeatGrid withKey(MusicalKey? key) => BeatGrid(
@@ -89,6 +103,7 @@ class BeatGrid {
     ending: ending,
     version: version,
     features: features,
+    envelope: envelope,
   );
 
   /// La stessa griglia vista dal finale: quella da usare per il brano che
@@ -107,6 +122,7 @@ class BeatGrid {
       key: key,
       version: version,
       features: features,
+      envelope: envelope,
     );
   }
 
@@ -183,6 +199,7 @@ class BeatGrid {
     // brano invece di dieci in numeri, e la scatola delle griglie sta tutta
     // in memoria.
     if (features.isNotEmpty) 'feat': encodeFeatures(features),
+    if (envelope.isNotEmpty) 'env': encodeFeatures(envelope),
   };
 
   factory BeatGrid.fromJson(Map<String, dynamic> j) => BeatGrid(
@@ -217,12 +234,17 @@ class BeatGrid {
       final String f => decodeFeatures(f),
       _ => const [],
     },
+    envelope: switch (j['env']) {
+      final String e => decodeFeatures(e),
+      _ => const [],
+    },
   );
 }
 
 /// L'ultima versione dell'analisi: le griglie piu' vecchie si rifanno
-/// quando servono a un mix, perche' senza feature non ci sono frasi.
-const int beatGridVersion = 4;
+/// quando servono a un mix, perche' senza feature non ci sono frasi. La 5
+/// aggiunge l'inviluppo per le macchie ([BeatGrid.envelope]).
+const int beatGridVersion = 5;
 
 /// Le feature in un byte l'una, da -100 a +27,5 dB a passi di mezzo
 /// decibel: sotto i -100 e' silenzio comunque, e nessuna banda di un
@@ -524,6 +546,25 @@ BeatGrid analyzeBeats(Int16List samples) {
       ..add(10 * math.log(o / n + 1e-3) / math.ln10);
   }
 
+  // L'inviluppo per le macchie: dei bassi il picco e non la media, perche'
+  // una cassa dura meno di un fotogramma e nella media si perderebbe; degli
+  // attacchi sopra i bassi la media, che dice quanto e' fitto il tratto.
+  final envStep = fps / BeatGrid.envelopeRate;
+  final envCount = (frames / envStep).floor();
+  final envelope = <double>[];
+  for (var k = 0; k < envCount; k++) {
+    final a = (k * envStep).floor(),
+        b = math.min(frames, math.max(a + 1, ((k + 1) * envStep).floor()));
+    var l = 0.0, o = 0.0;
+    for (var i = a; i < b; i++) {
+      if (bandLow[i] > l) l = bandLow[i];
+      o += math.max(0.0, onset[i] - lowOnset[i]);
+    }
+    envelope
+      ..add(db(l * norm))
+      ..add(10 * math.log(o / (b - a) + 1e-3) / math.ln10);
+  }
+
   return BeatGrid(
     bpm: finalBpm,
     energy: energy,
@@ -533,6 +574,7 @@ BeatGrid analyzeBeats(Int16List samples) {
     musicEnd: musicEnd,
     confidence: confidence,
     features: features,
+    envelope: envelope,
   );
 }
 

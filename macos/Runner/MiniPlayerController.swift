@@ -92,6 +92,12 @@ final class MiniPlayerController: NSObject, NSWindowDelegate, NSMenuItemValidati
         result(nil)
       case "isVisible":
         result(shared.isVisible)
+      case "music":
+        shared.model.music = Self.musicTrack(call.arguments)
+        result(nil)
+      case "musicIntensity":
+        shared.model.musicIntensity = (call.arguments as? Double) ?? 1
+        result(nil)
       default:
         result(FlutterMethodNotImplemented)
       }
@@ -101,6 +107,20 @@ final class MiniPlayerController: NSObject, NSWindowDelegate, NSMenuItemValidati
     // Il menu del xib e' gia' caricato, ma l'app non ha ancora finito di
     // partire: al giro dopo NSApp.windowsMenu e' di sicuro al suo posto.
     DispatchQueue.main.async { shared.installMenuItems() }
+  }
+
+  /// La musica del brano da `MiniPlayerWindow.setMusic`: tre Float32List
+  /// e la loro frequenza. Nil (brano cambiato, musica non ancora pronta)
+  /// e la macchia respira soltanto.
+  private static func musicTrack(_ args: Any?) -> SpotMusicTrack? {
+    guard let a = args as? [String: Any], let rate = a["rate"] as? Double else { return nil }
+    func floats(_ key: String) -> [Float]? {
+      guard let d = a[key] as? FlutterStandardTypedData else { return nil }
+      return d.data.withUnsafeBytes { Array($0.bindMemory(to: Float.self)) }
+    }
+    guard let pulse = floats("pulse"), let snap = floats("snap"), let energy = floats("energy")
+    else { return nil }
+    return SpotMusicTrack(rate: rate, pulse: pulse, snap: snap, energy: energy)
   }
 
   // MARK: - Dati da Now Playing

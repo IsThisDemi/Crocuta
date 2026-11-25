@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +14,7 @@ import 'services/dominant_color.dart';
 import 'services/downloads_controller.dart';
 import 'services/eq_controller.dart';
 import 'services/follows_controller.dart';
+import 'services/mini_player_window.dart';
 import 'services/now_playing_service.dart';
 import 'services/pot_service.dart';
 import 'services/player_controller.dart';
@@ -124,6 +127,49 @@ class MotionCoverController extends Notifier<bool> {
 
   Future<void> set(bool value) async {
     await ref.read(storageServiceProvider).setMotionCover(value);
+    state = value;
+  }
+}
+
+/// Quanto si muovono le macchie con la musica in ascolto, come un
+/// visualizzatore (vedi SpotMotionHost e BeatPulse): 0 spente, 1 di serie,
+/// fino a 2. A zero respirano soltanto, e nessun brano si scarica o si
+/// analizza per loro.
+final spotsMusicProvider = NotifierProvider<SpotsMusicController, double>(
+  SpotsMusicController.new,
+);
+
+class SpotsMusicController extends Notifier<double> {
+  static const double max = 2;
+
+  @override
+  double build() {
+    final v = ref.read(storageServiceProvider).spotsMusic;
+    unawaited(MiniPlayerWindow.setMusicIntensity(v));
+    return v;
+  }
+
+  /// Mentre trascini lo slider cambia e basta; [persist] alla fine.
+  Future<void> set(double value, {bool persist = true}) async {
+    final v = value.clamp(0.0, max);
+    state = v;
+    unawaited(MiniPlayerWindow.setMusicIntensity(v));
+    if (persist) await ref.read(storageServiceProvider).setSpotsMusic(v);
+  }
+}
+
+/// I testi di tutta l'app che crescono sui colpi della musica, come le
+/// macchie (vedi TextPulse): per ridere, spento di serie.
+final textPulseProvider = NotifierProvider<TextPulseController, bool>(
+  TextPulseController.new,
+);
+
+class TextPulseController extends Notifier<bool> {
+  @override
+  bool build() => ref.read(storageServiceProvider).textPulse;
+
+  Future<void> set(bool value) async {
+    await ref.read(storageServiceProvider).setTextPulse(value);
     state = value;
   }
 }

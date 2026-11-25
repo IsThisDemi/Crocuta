@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:io' show File;
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,9 +12,12 @@ import '../models/lyrics.dart';
 import '../models/track.dart';
 import '../providers.dart';
 import 'automix.dart';
+import 'beat_analysis.dart' show beatGridVersion;
+import 'beat_pulse.dart';
 import 'mix_sync.dart';
 import 'track_analyzer.dart';
 import 'karaoke.dart';
+import 'mini_player_window.dart';
 import 'mix_info.dart';
 import 'radio_seeds.dart';
 import 'shuffle_order.dart';
@@ -129,6 +133,112 @@ class PlayerController extends Notifier<PlayerState> {
     storage: ref.read(storageServiceProvider),
     fileFor: ref.read(songPreloaderProvider).fileFor,
   );
+
+  /// La musica del brano in ascolto per le macchie, che si muovono con
+  /// lei come un visualizzatore (vedi [beatPulse]). Null finche' il brano
+  /// non e' analizzato.
+  BeatPulse? _pulse;
+  String? _pulseFor;
+  String? _pulseAskedFor;
+
+  /// True quando [_pulse] e' gia' il migliore possibile per il brano: la
+  /// griglia dell'ultima versione, col suo inviluppo se c'e'.
+  bool _pulseFinal = false;
+  DateTime _pulseLookedAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// Come si muovono le macchie in questo istante.
+  ///
+  /// Lo chiede l'orologio delle macchie a ogni fotogramma, quindi niente
+  /// lavoro: la posizione dell'ultimo aggiornamento piu' il tempo passato
+  /// da allora, alla velocita' a cui suona il brano. Ferme in pausa, mentre
+  /// carica, e quando la posizione e' ferma da un secondo (sta bufferizzando
+  /// anche se dice di suonare): una macchia che batte sul silenzio stona.
+  SpotBeat beatPulse() {
+    final s = state;
+    final p = _pulse;
+    if (p == null || !s.isPlaying || s.isLoading) return noSpotBeat;
+    if (_pulseFor != s.current?.id) return noSpotBeat;
+    final since = DateTime.now().difference(_posAt).inMicroseconds / 1e6;
+    if (since > 1) return noSpotBeat;
+    return p.at(s.position.inMicroseconds / 1e6 + since * _tempoOf(_player));
+  }
+
+  /// Cambia [_pulse] e lo passa al mini player del Mac, che ha la sua
+  /// macchia e la muove da se': gli si manda tutto il brano, letto a
+  /// trenta valori al secondo, una volta sola.
+  void _setPulse(BeatPulse? p) {
+    _pulse = p;
+    if (!MiniPlayerWindow.isSupported) return;
+    if (p == null) {
+      unawaited(MiniPlayerWindow.clearMusic());
+      return;
+    }
+    const rate = 30.0;
+    final n = ((p.grid.musicEnd + 1) * rate).ceil();
+    final pulse = Float32List(n),
+        snap = Float32List(n),
+        energy = Float32List(n);
+    for (var i = 0; i < n; i++) {
+      final m = p.at(i / rate);
+      pulse[i] = m.pulse;
+      snap[i] = m.snap;
+      energy[i] = m.energy;
+    }
+    unawaited(
+      MiniPlayerWindow.setMusic(
+        rate: rate,
+        pulse: pulse,
+        snap: snap,
+        energy: energy,
+      ),
+    );
+  }
+
+  /// Tiene [_pulse] sul brano in ascolto. Gira a ogni aggiornamento di
+  /// posizione, quindi esce subito quando non c'e' niente da fare.
+  ///
+  /// L'analisi e' quella di AutoMix. Con AutoMix spento il brano non si
+  /// analizza da solo: lo si fa qui, dopo i primi secondi per non rubare
+  /// banda all'avvio dello stream. Costa un download del brano se suonava
+  /// in streaming, una volta sola: l'analisi resta salvata. Una griglia di
+  /// una versione di prima, senza inviluppo, serve intanto: le macchie
+  /// battono sulla griglia finche' l'analisi nuova non e' pronta.
+  void _watchPulse() {
+    final cur = state.current;
+    if (cur == null || ref.read(spotsMusicProvider) <= 0) return;
+    final now = DateTime.now();
+    if (_pulseFor != cur.id) {
+      _pulseFor = cur.id;
+      _setPulse(null);
+      _pulseFinal = false;
+      _pulseLookedAt = DateTime.fromMillisecondsSinceEpoch(0);
+    }
+    if (_pulseFinal) return;
+    if (now.difference(_pulseLookedAt) < const Duration(seconds: 3)) return;
+    _pulseLookedAt = now;
+    final service = ref.read(youtubeServiceProvider);
+    final audioId = service.knownAudioId(cur.id);
+    final grid = _analyzer.known(audioId, minVersion: 4);
+    if (grid != null && _pulse?.grid != grid) _setPulse(BeatPulse(grid));
+    if (grid != null && grid.version >= beatGridVersion) {
+      _pulseFinal = true;
+      final id = cur.id;
+      unawaited(
+        _analyzer.envelopeFor(audioId).then((env) {
+          if (env != null && _pulseFor == id) {
+            _setPulse(BeatPulse(grid, envelope: env));
+          }
+        }),
+      );
+      return;
+    }
+    if (_pulseAskedFor == cur.id ||
+        state.position < const Duration(seconds: 3)) {
+      return;
+    }
+    _pulseAskedFor = cur.id;
+    unawaited(_ensureAnalyzed(cur));
+  }
 
   /// Separa voce e base del tratto che l'uscente suonera' nel mix.
   late final StemService _stemService = StemService(
@@ -604,6 +714,7 @@ class PlayerController extends Notifier<PlayerState> {
         state = state.copyWith(position: pos);
         _syncKaraoke(pos);
         _persist();
+        _watchPulse();
         // Il mix a tempo, se c'e' un piano: si occupa lui della transizione.
         if (_handleBeatMix(pos)) {
           _syncNowPlaying();

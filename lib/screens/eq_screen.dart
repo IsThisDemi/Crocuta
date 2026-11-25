@@ -405,6 +405,7 @@ class _EqGraphState extends State<EqGraph> {
                         accent: accent,
                         active: _column,
                         time: t,
+                        music: SpotMotion.musicOf(context),
                       ),
                     ),
                   ),
@@ -478,12 +479,16 @@ class _GraphPainter extends CustomPainter {
   /// L'orologio delle macchie: i cursori sono macchioline vive.
   final double? time;
 
+  /// La musica in ascolto: anche i cursori si muovono con lei.
+  final SpotMusic music;
+
   const _GraphPainter({
     required this.preamp,
     required this.gains,
     required this.accent,
     this.active,
     this.time,
+    this.music = silentMusic,
   });
 
   @override
@@ -577,10 +582,14 @@ class _GraphPainter extends CustomPainter {
       final r = EqGraph.knob + (c == active ? 6 : 3);
       canvas.drawPath(
         spotPath(
-          Rect.fromCircle(center: Offset(x, y), radius: r),
+          swollenRect(
+            Rect.fromCircle(center: Offset(x, y), radius: r),
+            music.pulse,
+          ),
           'eq#$c',
           wobble: 0.8,
           time: time == null ? null : time! * 1.6,
+          music: music,
         ),
         Paint()..color = accent,
       );
@@ -592,6 +601,8 @@ class _GraphPainter extends CustomPainter {
       old.preamp != preamp ||
       old.accent != accent ||
       old.active != active ||
+      old.time != time ||
+      old.music != music ||
       !_same(old.gains, gains);
 
   static bool _same(List<double> a, List<double> b) {

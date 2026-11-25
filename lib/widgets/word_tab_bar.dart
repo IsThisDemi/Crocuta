@@ -521,7 +521,12 @@ class _OrbitState extends ConsumerState<_Orbit> with TickerProviderStateMixin {
                         child: IgnorePointer(
                           child: SpotMotionBuilder(
                             builder: (context, clock) => CustomPaint(
-                              painter: _TrailPainter(trail, accent, clock),
+                              painter: _TrailPainter(
+                                trail,
+                                accent,
+                                clock,
+                                SpotMotion.musicOf(context),
+                              ),
                             ),
                           ),
                         ),
@@ -646,8 +651,9 @@ class _TrailPainter extends CustomPainter {
   final List<(Offset, double)> drops;
   final Color color;
   final double? time;
+  final SpotMusic music;
 
-  _TrailPainter(this.drops, this.color, this.time);
+  _TrailPainter(this.drops, this.color, this.time, this.music);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -657,10 +663,11 @@ class _TrailPainter extends CustomPainter {
       if (r <= 0.3) continue;
       canvas.drawPath(
         spotPath(
-          Rect.fromCircle(center: at, radius: r),
+          swollenRect(Rect.fromCircle(center: at, radius: r), music.pulse),
           'trail-${k++}',
           wobble: 0.7,
           time: time == null ? null : time! * 3,
+          music: music,
         ),
         paint,
       );
@@ -698,6 +705,7 @@ class _Ring extends ConsumerWidget {
             seed: seed,
             fraction: scrub ?? live,
             time: t,
+            music: SpotMotion.musicOf(context),
             width: width,
             color: accent,
           ),
@@ -711,6 +719,7 @@ class _RingPainter extends CustomPainter {
   final String seed;
   final double fraction;
   final double? time;
+  final SpotMusic music;
   final double width;
   final Color color;
 
@@ -718,6 +727,7 @@ class _RingPainter extends CustomPainter {
     required this.seed,
     required this.fraction,
     required this.time,
+    this.music = silentMusic,
     required this.width,
     required this.color,
   });
@@ -725,9 +735,10 @@ class _RingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final path = spotPath(
-      (Offset.zero & size).deflate(width / 2),
+      swollenRect((Offset.zero & size).deflate(width / 2), music.pulse),
       seed,
       time: time,
+      music: music,
     );
     final stroke = Paint()
       ..style = PaintingStyle.stroke
@@ -746,6 +757,7 @@ class _RingPainter extends CustomPainter {
   bool shouldRepaint(_RingPainter old) =>
       old.fraction != fraction ||
       old.time != time ||
+      old.music != music ||
       old.width != width ||
       old.color != color ||
       old.seed != seed;
@@ -820,6 +832,7 @@ class _Satellite extends StatelessWidget {
                           shape: SpotBorder(
                             seed: 'orbit-drop-$label-$seed',
                             time: t == null ? null : t * 2,
+                            music: SpotMotion.musicOf(context),
                           ),
                         ),
                       ),
@@ -842,6 +855,7 @@ class _Satellite extends StatelessWidget {
                           seed: 'orbit-$label',
                           wobble: 0.85,
                           time: t == null ? null : t * 1.4,
+                          music: SpotMotion.musicOf(context),
                         ),
                       ),
                       child: Center(

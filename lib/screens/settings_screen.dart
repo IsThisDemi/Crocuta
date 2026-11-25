@@ -194,6 +194,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final radio = ref.watch(radioProvider);
     final preload = ref.watch(autoPreloadProvider);
     final motion = ref.watch(motionCoverProvider);
+    final spotsMusic = ref.watch(spotsMusicProvider);
+    final textPulse = ref.watch(textPulseProvider);
     final connect = ref.read(connectServiceProvider);
     final connectOn = ref.read(storageServiceProvider).connectEnabled;
     final lastSync = ref.watch(lastSyncProvider);
@@ -261,8 +263,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _Group(
               header: 'Appearance',
               footer:
-                  'Loops a silent clip of the music video in the player, '
-                  'when the song has one.',
+                  'Animated Covers loops a silent clip of the music video in '
+                  'the player, when the song has one. With Spots Follow the '
+                  'Music the spots swell with the bass and the drums of the '
+                  'song playing: slide it all the way left to turn it off. '
+                  'Each song is analyzed once, a few seconds after it '
+                  'starts. Pulsing Text makes every text bounce too, just '
+                  'for fun.',
               rows: [
                 _Row(
                   icon: Icons.motion_photos_on_rounded,
@@ -271,6 +278,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   trailing: toggle(
                     motion,
                     (v) => ref.read(motionCoverProvider.notifier).set(v),
+                  ),
+                ),
+                _Row(
+                  icon: Icons.graphic_eq_rounded,
+                  color: const Color(0xFFF97316),
+                  title: 'Spots Follow the Music',
+                  value: spotsMusic <= 0
+                      ? 'Off'
+                      : '${(spotsMusic * 100).round()}%',
+                  trailing: SizedBox(
+                    width: 150,
+                    child: Slider(
+                      value: spotsMusic,
+                      max: SpotsMusicController.max,
+                      divisions: 8,
+                      activeColor: context.colors.accent,
+                      onChanged: (v) => ref
+                          .read(spotsMusicProvider.notifier)
+                          .set(v, persist: false),
+                      onChangeEnd: (v) =>
+                          ref.read(spotsMusicProvider.notifier).set(v),
+                    ),
+                  ),
+                ),
+                _Row(
+                  icon: Icons.text_fields_rounded,
+                  color: const Color(0xFFEAB308),
+                  title: 'Pulsing Text',
+                  trailing: toggle(
+                    textPulse,
+                    (v) => ref.read(textPulseProvider.notifier).set(v),
                   ),
                 ),
               ],
@@ -567,7 +605,12 @@ class _Row extends StatelessWidget {
                   height: 34,
                   decoration: ShapeDecoration(
                     color: color,
-                    shape: SpotBorder(seed: title, wobble: 0.7, time: t),
+                    shape: SpotBorder(
+                      seed: title,
+                      wobble: 0.7,
+                      time: t,
+                      music: SpotMotion.musicOf(context),
+                    ),
                   ),
                   child: Icon(icon, size: 18, color: Colors.white),
                 ),

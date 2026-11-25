@@ -535,7 +535,12 @@ class _DragHandle extends StatelessWidget {
           builder: (context, t) => DecoratedBox(
             decoration: ShapeDecoration(
               color: color,
-              shape: SpotBorder(seed: 'sheet-handle', wobble: 0.7, time: t),
+              shape: SpotBorder(
+                seed: 'sheet-handle',
+                wobble: 0.7,
+                time: t,
+                music: SpotMotion.musicOf(context),
+              ),
             ),
           ),
         ),
@@ -711,6 +716,7 @@ class _MenuRowState<T> extends State<_MenuRow<T>> {
                         seed: 'menu-${item.icon.codePoint}',
                         wobble: 0.8,
                         time: t,
+                        music: SpotMotion.musicOf(context),
                         side: BorderSide(
                           color: Colors.white.withValues(alpha: lit ? 0 : 0.1),
                         ),

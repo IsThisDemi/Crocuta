@@ -117,7 +117,11 @@ class _ArtistsScreenState extends ConsumerState<ArtistsScreen> {
                           SpotMotionBuilder(
                             builder: (context, t) => PressableArtwork(
                               state: state,
-                              shape: SpotBorder(seed: art, time: t),
+                              shape: SpotBorder(
+                                seed: art,
+                                time: t,
+                                music: SpotMotion.musicOf(context),
+                              ),
                               child: SizedBox.square(
                                 dimension: tile,
                                 child: Spot(

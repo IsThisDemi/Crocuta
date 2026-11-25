@@ -3,7 +3,31 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
+
+/// La musica in ascolto in un istante, per le macchie che si muovono con
+/// lei (vedi services/beat_pulse.dart, che la calcola). Tutti e tre 0-1:
+/// [pulse] i colpi di cassa e di basso, [snap] quelli di rullante e
+/// charleston, [energy] quanto e' pieno il tratto.
+typedef SpotMusic = ({double pulse, double snap, double energy});
+
+const SpotMusic silentMusic = (pulse: 0, snap: 0, energy: 0);
+
+/// Di quanto cresce una macchia su un colpo di basso [pulse]: fino a un
+/// tredicesimo, come una cassa che spinge il cono dell'altoparlante.
+double spotSwell(double pulse) => 1 + 0.075 * pulse.clamp(0.0, 2.0);
+
+/// [rect] cresciuto attorno al suo centro per il colpo [pulse].
+Rect swollenRect(Rect rect, double pulse) {
+  final k = spotSwell(pulse);
+  if (k == 1) return rect;
+  return Rect.fromCenter(
+    center: rect.center,
+    width: rect.width * k,
+    height: rect.height * k,
+  );
+}
 
 /// La macchia: la forma di Macchia, ritagliata dal manto della iena.
 ///
@@ -29,16 +53,32 @@ class SpotBorder extends OutlinedBorder {
   /// la forma e' ferma.
   final double? time;
 
+  /// La musica in ascolto (vedi [SpotMotion.musicOf]): conta solo per una
+  /// macchia viva.
+  final SpotMusic music;
+
+  /// Se cresce sui colpi di basso. Una superficie piena si', oltre i lati
+  /// del suo riquadro; il filo attorno a una copertina no, perche' la
+  /// copertina cresce gia' tutta insieme (vedi [Spot]).
+  final bool swell;
+
   const SpotBorder({
     required this.seed,
     this.wobble = 1,
     this.time,
+    this.music = silentMusic,
+    this.swell = true,
     super.side,
   });
 
   @override
-  Path getOuterPath(Rect rect, {TextDirection? textDirection}) =>
-      spotPath(rect, seed, wobble: wobble, time: time);
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) => spotPath(
+    swell ? swollenRect(rect, music.pulse) : rect,
+    seed,
+    wobble: wobble,
+    time: time,
+    music: music,
+  );
 
   @override
   Path getInnerPath(Rect rect, {TextDirection? textDirection}) =>
@@ -59,10 +99,14 @@ class SpotBorder extends OutlinedBorder {
     String? seed,
     double? wobble,
     double? time,
+    SpotMusic? music,
+    bool? swell,
   }) => SpotBorder(
     seed: seed ?? this.seed,
     wobble: wobble ?? this.wobble,
     time: time ?? this.time,
+    music: music ?? this.music,
+    swell: swell ?? this.swell,
     side: side ?? this.side,
   );
 
@@ -86,10 +130,12 @@ class SpotBorder extends OutlinedBorder {
       other.seed == seed &&
       other.wobble == wobble &&
       other.time == time &&
+      other.music == music &&
+      other.swell == swell &&
       other.side == side;
 
   @override
-  int get hashCode => Object.hash(seed, wobble, time, side);
+  int get hashCode => Object.hash(seed, wobble, time, music, swell, side);
 }
 
 /// FNV-1a a 32 bit: lo stesso numero per la stessa stringa su ogni
@@ -142,7 +188,20 @@ class SpotRandom {
 /// che respira. A [time] zero la forma e' esattamente quella ferma: le
 /// oscillazioni partono da zero, quindi una copertina che comincia a
 /// muoversi non salta. Lo stesso conto e' in Swift (MiniPlayerView.swift).
-Path spotPath(Rect rect, String seed, {double wobble = 1, double? time}) {
+///
+/// Con [music] si muove con la musica in ascolto, come un visualizzatore:
+/// a ogni colpo di basso alcuni lobi si gonfiano e altri cedono, a ogni
+/// colpo di rullante altri ancora, ognuno quanto dice il seme; e piu' il
+/// tratto e' pieno, piu' ampio e' il respiro. La forma si stira comunque
+/// fino ai lati di [rect]: crescere sui colpi e' di chi la disegna
+/// ([spotSwell]). In silenzio la forma e' quella senza musica.
+Path spotPath(
+  Rect rect,
+  String seed, {
+  double wobble = 1,
+  double? time,
+  SpotMusic music = silentMusic,
+}) {
   final rnd = SpotRandom(spotSeed(seed));
   final n = 6 + rnd.nextInt(3);
   final step = 2 * math.pi / n;
@@ -159,13 +218,28 @@ Path spotPath(Rect rect, String seed, {double wobble = 1, double? time}) {
     // Le fasi e i ritmi si tirano dopo la forma, cosi' la forma ferma resta
     // quella di sempre. Ampiezze piccole: deve respirare, non deformarsi.
     final amp = math.max(w, 0.5);
+    // Un tratto pieno respira fino a due volte e mezzo piu' ampio.
+    final breath = amp * (1 + 1.5 * music.energy.clamp(0.0, 2.0));
     for (var i = 0; i < n; i++) {
       final phase = rnd.nextDouble() * 2 * math.pi;
       final freq = 0.55 + rnd.nextDouble() * 0.5;
       double wave(double f, double ph) =>
           math.sin(time * f + ph) - math.sin(ph);
-      radii[i] *= 1 + 0.065 * amp * wave(freq, phase);
-      angles[i] += 0.09 * amp * wave(freq * 0.73, phase * 1.7);
+      radii[i] *= 1 + 0.065 * breath * wave(freq, phase);
+      angles[i] += 0.09 * breath * wave(freq * 0.73, phase * 1.7);
+    }
+    // Anche i colpi dopo, per lo stesso motivo. Si tirano sempre, musica
+    // o no, cosi' ogni macchia sobbalza sempre allo stesso modo: i bassi
+    // spingono certi lobi, il rullante altri.
+    // Fino a 2: lo slider delle Impostazioni raddoppia l'effetto.
+    final bass = music.pulse.clamp(0.0, 2.0);
+    final snap = music.snap.clamp(0.0, 2.0);
+    for (var i = 0; i < n; i++) {
+      final kick = rnd.nextDouble() * 2 - 0.7;
+      final tick = rnd.nextDouble() * 2 - 1;
+      if (bass == 0 && snap == 0) continue;
+      radii[i] *= 1 + amp * (0.16 * bass * kick + 0.09 * snap * tick);
+      angles[i] += amp * (0.05 * bass * kick + 0.06 * snap * tick);
     }
   }
   final pts = [
@@ -233,39 +307,144 @@ class Spot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final time = still ? null : (this.time ?? SpotMotion.of(context));
-    final clipped = ClipPath(
-      clipper: _SpotClipper(seed, wobble, time),
+    // Il battito solo con l'orologio dell'app: una macchia col suo
+    // orologio (il volo, i fogli) non sa a che punto e' la musica.
+    final music = still || this.time != null
+        ? null
+        : SpotMotion.musicListenableOf(context);
+    Widget spot = ClipPath(
+      clipper: _SpotClipper(seed, wobble, time, music),
       child: child,
     );
-    if (rim == null) return clipped;
-    return CustomPaint(
-      foregroundPainter: _RimPainter(
-        SpotBorder(
-          seed: seed,
-          wobble: wobble,
-          side: BorderSide(color: rim!, width: rimWidth),
+    if (rim != null) {
+      spot = CustomPaint(
+        foregroundPainter: _RimPainter(
+          SpotBorder(
+            seed: seed,
+            wobble: wobble,
+            swell: false,
+            side: BorderSide(color: rim!, width: rimWidth),
+          ),
+          time,
+          music,
         ),
-        time,
-      ),
-      child: clipped,
+        child: spot,
+      );
+    }
+    if (music == null) return spot;
+    // Sui colpi di basso la copertina cresce tutta, immagine compresa: il
+    // ritaglio da solo non puo' uscire dalla sua immagine.
+    return _Swell(music: music, child: spot);
+  }
+}
+
+/// Fa crescere [child] attorno al suo centro sui colpi di basso, senza
+/// ricostruirlo: cambia solo la trasformazione con cui si dipinge.
+class _Swell extends SingleChildRenderObjectWidget {
+  final ValueListenable<SpotMusic> music;
+
+  const _Swell({required this.music, super.child});
+
+  @override
+  _RenderSwell createRenderObject(BuildContext context) => _RenderSwell(music);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderSwell r) =>
+      r.music = music;
+}
+
+class _RenderSwell extends RenderProxyBox {
+  _RenderSwell(this._music);
+
+  ValueListenable<SpotMusic> _music;
+  set music(ValueListenable<SpotMusic> v) {
+    if (v == _music) return;
+    if (attached) {
+      _music.removeListener(markNeedsPaint);
+      v.addListener(markNeedsPaint);
+    }
+    _music = v;
+    markNeedsPaint();
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _music.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _music.removeListener(markNeedsPaint);
+    super.detach();
+  }
+
+  Matrix4 get _transform {
+    final k = spotSwell(_music.value.pulse);
+    final c = size.center(Offset.zero);
+    return Matrix4.identity()
+      ..translateByDouble(c.dx, c.dy, 0, 1)
+      ..scaleByDouble(k, k, 1, 1)
+      ..translateByDouble(-c.dx, -c.dy, 0, 1);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (child == null) return;
+    final k = spotSwell(_music.value.pulse);
+    if (k == 1) {
+      layer = null;
+      context.paintChild(child!, offset);
+      return;
+    }
+    layer = context.pushTransform(
+      needsCompositing,
+      offset,
+      _transform,
+      super.paint,
+      oldLayer: layer is TransformLayer ? layer as TransformLayer : null,
     );
   }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    transform.multiply(_transform);
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
+      result.addWithPaintTransform(
+        transform: _transform,
+        position: position,
+        hitTest: (r, p) => super.hitTestChildren(r, position: p),
+      );
 }
 
 class _SpotClipper extends CustomClipper<Path> {
   final String seed;
   final double wobble;
   final ValueListenable<double>? time;
+  final ValueListenable<SpotMusic>? music;
 
-  _SpotClipper(this.seed, this.wobble, this.time) : super(reclip: time);
+  // Basta l'orologio: la musica cambia nello stesso passo.
+  _SpotClipper(this.seed, this.wobble, this.time, this.music)
+    : super(reclip: time);
 
   @override
-  Path getClip(Size size) =>
-      spotPath(Offset.zero & size, seed, wobble: wobble, time: time?.value);
+  Path getClip(Size size) => spotPath(
+    Offset.zero & size,
+    seed,
+    wobble: wobble,
+    time: time?.value,
+    music: music?.value ?? silentMusic,
+  );
 
   @override
   bool shouldReclip(_SpotClipper old) =>
-      old.seed != seed || old.wobble != wobble || old.time != time;
+      old.seed != seed ||
+      old.wobble != wobble ||
+      old.time != time ||
+      old.music != music;
 }
 
 /// L'orologio di tutte le macchie dell'app: uno solo, in cima all'albero.
@@ -276,10 +455,31 @@ class _SpotClipper extends CustomClipper<Path> {
 /// decine di callback a ogni fotogramma. Avanza a trenta fotogrammi al
 /// secondo — il movimento e' lento, di piu' non si vede — e si ferma con
 /// l'app nascosta o col movimento ridotto attivo nel sistema.
+///
+/// Con [beat] le macchie si muovono con la musica, come un visualizzatore:
+/// a ogni passo l'orologio chiede al brano in ascolto quanto gonfiarle
+/// (il colpo di cassa o di basso di quell'istante) e quanto e' pieno il
+/// tratto, che fa correre l'orologio fino a tre volte piu' svelto: un
+/// ritornello fitto le fa ondeggiare di piu' di una strofa. Mentre c'e'
+/// musica va a sessanta fotogrammi: un colpo dura un decimo di secondo, e
+/// a trenta sarebbero tre scatti.
 class SpotMotionHost extends StatefulWidget {
   final Widget child;
 
-  const SpotMotionHost({super.key, required this.child});
+  /// La musica in questo istante: quanto si gonfiano le macchie e quanto
+  /// e' pieno il tratto, entrambi 0-1.
+  final SpotMusic Function()? beat;
+
+  /// Quanto contano i colpi e l'energia: 0 le macchie respirano soltanto,
+  /// 1 l'effetto di serie, 2 il doppio. Lo slider delle Impostazioni.
+  final double intensity;
+
+  const SpotMotionHost({
+    super.key,
+    required this.child,
+    this.beat,
+    this.intensity = 1,
+  });
 
   @override
   State<SpotMotionHost> createState() => _SpotMotionHostState();
@@ -288,20 +488,48 @@ class SpotMotionHost extends StatefulWidget {
 class _SpotMotionHostState extends State<SpotMotionHost>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final _time = ValueNotifier<double>(0);
+  final _music = ValueNotifier<SpotMusic>(silentMusic);
   late final Ticker _ticker = createTicker(_onTick);
-  double _base = 0;
   bool _visible = true;
 
+  /// L'orologio vero, che corre piu' svelto quando la musica e' piena: si
+  /// somma passo per passo, e [_time] lo pubblica solo ogni tanto.
+  double _clock = 0;
+  Duration _last = Duration.zero;
+
+  /// L'ultimo istante dell'orologio in cui la musica batteva.
+  double _beatSeenAt = -1e9;
+
   void _onTick(Duration elapsed) {
-    final t = _base + elapsed.inMicroseconds / 1e6;
-    if (t - _time.value >= 1 / 30) _time.value = t;
+    final dt = (elapsed - _last).inMicroseconds / 1e6;
+    _last = elapsed;
+    final k = widget.intensity;
+    final raw = k > 0 ? widget.beat?.call() ?? silentMusic : silentMusic;
+    final m = k == 1
+        ? raw
+        : (pulse: raw.pulse * k, snap: raw.snap * k, energy: raw.energy * k);
+    // Un tratto pieno fa correre l'orologio fino a quattro volte: il
+    // respiro lento di sempre diventa un ondeggiare.
+    _clock += dt * (1 + 3 * m.energy);
+    final t = _clock;
+    final playing = m.pulse > 0.002 || m.snap > 0.002 || m.energy > 0.002;
+    if (playing) _beatSeenAt = t;
+    // Sessanta fotogrammi finche' la musica batte, anche fra un colpo e
+    // l'altro di un brano lento: tornando a trenta nel silenzio fra due
+    // battiti, l'attacco del successivo cadrebbe fra due fotogrammi.
+    final beating = t - _beatSeenAt < 1.5;
+    if (t - _time.value < (beating ? 1 / 60 : 1 / 30) - 1e-4) return;
+    // Il battito prima dell'orologio: chi ascolta l'orologio ridisegna
+    // leggendo il battito, e deve trovarlo gia' nuovo.
+    _music.value = playing ? m : silentMusic;
+    _time.value = t;
   }
 
   void _sync() {
     final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final run = _visible && !reduce;
     if (run && !_ticker.isActive) {
-      _base = _time.value;
+      _last = Duration.zero;
       _ticker.start();
     } else if (!run && _ticker.isActive) {
       _ticker.stop();
@@ -332,27 +560,46 @@ class _SpotMotionHostState extends State<SpotMotionHost>
     WidgetsBinding.instance.removeObserver(this);
     _ticker.dispose();
     _time.dispose();
+    _music.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) =>
-      SpotMotion(time: _time, child: widget.child);
+      SpotMotion(time: _time, music: _music, child: widget.child);
 }
 
 /// Porta l'orologio delle macchie giu' per l'albero.
 class SpotMotion extends InheritedWidget {
   final ValueListenable<double> time;
 
-  const SpotMotion({super.key, required this.time, required super.child});
+  /// La musica in ascolto, aggiornata nello stesso passo di [time].
+  final ValueListenable<SpotMusic> music;
+
+  const SpotMotion({
+    super.key,
+    required this.time,
+    required this.music,
+    required super.child,
+  });
 
   /// L'orologio, o null fuori da un [SpotMotionHost] (nei test, per
   /// esempio): allora le macchie stanno ferme.
   static ValueListenable<double>? of(BuildContext context) =>
       context.getInheritedWidgetOfExactType<SpotMotion>()?.time;
 
+  /// La musica come valore che cambia, per chi ridisegna da se'.
+  static ValueListenable<SpotMusic>? musicListenableOf(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<SpotMotion>()?.music;
+
+  /// La musica adesso: per le macchie costruite in un [SpotMotionBuilder],
+  /// che si ricostruisce a ogni passo e la rilegge.
+  static SpotMusic musicOf(BuildContext context) =>
+      musicListenableOf(context)?.value ?? silentMusic;
+
   @override
-  bool updateShouldNotify(SpotMotion old) => old.time != time;
+  bool updateShouldNotify(SpotMotion old) =>
+      old.time != time || old.music != music;
 }
 
 /// Ricostruisce [builder] a ogni passo dell'orologio delle macchie, per le
@@ -377,13 +624,16 @@ class SpotMotionBuilder extends StatelessWidget {
 class _RimPainter extends CustomPainter {
   final SpotBorder shape;
   final ValueListenable<double>? time;
+  final ValueListenable<SpotMusic>? music;
 
-  _RimPainter(this.shape, this.time) : super(repaint: time);
-
-  @override
-  void paint(Canvas canvas, Size size) =>
-      shape.copyWith(time: time?.value).paint(canvas, Offset.zero & size);
+  _RimPainter(this.shape, this.time, this.music) : super(repaint: time);
 
   @override
-  bool shouldRepaint(_RimPainter old) => old.shape != shape || old.time != time;
+  void paint(Canvas canvas, Size size) => shape
+      .copyWith(time: time?.value, music: music?.value ?? silentMusic)
+      .paint(canvas, Offset.zero & size);
+
+  @override
+  bool shouldRepaint(_RimPainter old) =>
+      old.shape != shape || old.time != time || old.music != music;
 }

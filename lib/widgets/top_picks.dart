@@ -179,6 +179,7 @@ class _PickCardState extends ConsumerState<_PickCard> {
                               shape: SpotBorder(
                                 seed: '${pick.artist}#play',
                                 time: t,
+                                music: SpotMotion.musicOf(context),
                               ),
                             ),
                             child: Icon(

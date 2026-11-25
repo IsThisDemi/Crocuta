@@ -220,6 +220,7 @@ class _PeriodPicker extends StatelessWidget {
                                     shape: SpotBorder(
                                       seed: 'den-marker',
                                       time: t,
+                                      music: SpotMotion.musicOf(context),
                                     ),
                                   ),
                                 ),

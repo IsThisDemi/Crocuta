@@ -42,6 +42,7 @@ class SpotPlayButton extends StatelessWidget {
       seed: _seed,
       wobble: 0.9,
       time: t == null ? null : t * 1.4,
+      music: SpotMotion.musicOf(context),
     );
     return Semantics(
       button: true,
@@ -182,6 +183,7 @@ class SpotCover extends ConsumerWidget {
                               seed: '$url#$i',
                               wobble: 0.8,
                               time: t == null ? null : t * (1.3 + i * 0.15),
+                              music: SpotMotion.musicOf(context),
                             ),
                           ),
                         ),
@@ -269,7 +271,11 @@ class LiveSpotDot extends ConsumerWidget {
       builder: (context, t) => DecoratedBox(
         decoration: ShapeDecoration(
           color: color,
-          shape: SpotBorder(seed: seed, time: t == null ? null : t * 1.8),
+          shape: SpotBorder(
+            seed: seed,
+            time: t == null ? null : t * 1.8,
+            music: SpotMotion.musicOf(context),
+          ),
         ),
       ),
     );

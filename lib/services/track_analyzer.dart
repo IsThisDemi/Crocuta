@@ -127,9 +127,44 @@ class TrackAnalyzer {
       '${grid.ending?.bpm.toStringAsFixed(1)} BPM fiducia '
       '${grid.ending?.confidence.toStringAsFixed(2)}',
     );
-    _grids[audioId] = grid;
-    await storage.saveBeatGrid(audioId, grid.toJson());
-    return grid;
+    // L'inviluppo in un file suo, la griglia senza nella scatola: vedi
+    // BeatGrid.envelope.
+    final json = grid.toJson();
+    final env = json.remove('env');
+    if (env is String) {
+      try {
+        final f = await _envelopeFile(audioId);
+        await f.writeAsString(env);
+      } catch (e) {
+        debugPrint('inviluppo di $audioId non salvato: $e');
+      }
+    }
+    final kept = BeatGrid.fromJson(json);
+    _grids[audioId] = kept;
+    await storage.saveBeatGrid(audioId, json);
+    return kept;
+  }
+
+  Directory? _envelopeDir;
+
+  Future<File> _envelopeFile(String audioId) async {
+    final dir = _envelopeDir ??= Directory(
+      '${(await getApplicationSupportDirectory()).path}/envelopes',
+    );
+    if (!dir.existsSync()) dir.createSync(recursive: true);
+    return File('${dir.path}/$audioId.env');
+  }
+
+  /// L'inviluppo di [audioId] per le macchie (vedi [BeatGrid.envelope]),
+  /// se il brano e' stato analizzato dalla versione 5 in poi.
+  Future<List<double>?> envelopeFor(String audioId) async {
+    try {
+      final f = await _envelopeFile(audioId);
+      if (!f.existsSync()) return null;
+      return decodeFeatures(await f.readAsString());
+    } catch (_) {
+      return null;
+    }
   }
 
   _BeatWorker? _worker;
@@ -241,6 +276,7 @@ BeatGrid analyzeTrack(Int16List pcm, BeatLogitsNet net) {
     confidence: head?.confidence ?? 0,
     energy: base.energy,
     features: base.features,
+    envelope: base.envelope,
     key: base.key,
     ending: (
       bpm: tail?.bpm ?? base.bpm,

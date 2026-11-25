@@ -329,6 +329,7 @@ class TimeDrop extends StatelessWidget {
             seed: 'seek-drop',
             wobble: 0.7,
             time: t == null ? null : t * 2.2,
+            music: SpotMotion.musicOf(context),
           ),
         ),
         child: Center(

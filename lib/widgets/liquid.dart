@@ -217,6 +217,7 @@ class _GlassCircleIconButtonState extends State<GlassCircleIconButton> {
                       : (w.background ?? AppColors.ink600),
                   shape: shape.copyWith(
                     time: t,
+                    music: SpotMotion.musicOf(context),
                     side: BorderSide(
                       color: Colors.white.withValues(alpha: lit ? 0 : 0.08),
                     ),

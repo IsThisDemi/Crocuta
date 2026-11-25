@@ -49,7 +49,11 @@ class EmptyState extends StatelessWidget {
                           color: context.colors.accentMuted.withValues(
                             alpha: 0.22,
                           ),
-                          shape: SpotBorder(seed: title, time: t),
+                          shape: SpotBorder(
+                            seed: title,
+                            time: t,
+                            music: SpotMotion.musicOf(context),
+                          ),
                         ),
                         child: Icon(
                           icon,
@@ -68,7 +72,11 @@ class EmptyState extends StatelessWidget {
                       builder: (context, t) => DecoratedBox(
                         decoration: ShapeDecoration(
                           color: context.colors.accent.withValues(alpha: 0.5),
-                          shape: SpotBorder(seed: '$title#2', time: t),
+                          shape: SpotBorder(
+                            seed: '$title#2',
+                            time: t,
+                            music: SpotMotion.musicOf(context),
+                          ),
                         ),
                       ),
                     ),

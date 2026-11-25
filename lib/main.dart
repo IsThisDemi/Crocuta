@@ -22,6 +22,7 @@ import 'navigation.dart';
 import 'services/voice_assistant.dart';
 import 'widgets/voice_sheet.dart';
 import 'design/spot.dart';
+import 'design/text_pulse.dart';
 import 'design/accent.dart';
 import 'dev/readme_demo.dart';
 import 'dev/readme_shots.dart';
@@ -84,7 +85,17 @@ class CrocutaApp extends StatelessWidget {
       // il movimento ridotto e' attivo, e sopra ogni pagina e foglio.
       builder: (context, child) => _ReadmeShotsBoundary(
         child: TapOriginTracker(
-          child: SpotMotionHost(
+          child: Consumer(
+            builder: (context, ref, child) => SpotMotionHost(
+              // Le macchie si muovono col brano in ascolto, quanto dicono
+              // le Impostazioni.
+              beat: ref.read(playerProvider.notifier).beatPulse,
+              intensity: ref.watch(spotsMusicProvider),
+              child: TextPulse(
+                enabled: ref.watch(textPulseProvider),
+                child: child!,
+              ),
+            ),
             // Il colore del brano in ascolto per tutto cio' che si apre sopra
             // le pagine — menu, fogli, avvisi, il player — che vive sul
             // navigatore radice, fuori dalla shell e dal suo AccentScope. Senza,

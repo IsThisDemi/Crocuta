@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:yeen_music/providers.dart';
@@ -20,6 +21,13 @@ void main() {
       ],
     );
     expect(find.text('Animated Covers'), findsOneWidget);
+    expect(find.text('Spots Follow the Music'), findsOneWidget);
+    // Piu' giu' della prima schermata, da quando Aspetto ha tre righe.
+    await tester.scrollUntilVisible(
+      find.text('Crocuta Connect'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Crocuta Connect'), findsOneWidget);
   });
 }

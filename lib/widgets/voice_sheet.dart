@@ -229,6 +229,7 @@ class _VoiceSpot extends StatelessWidget {
         builder: (context, t) {
           final speed = fast ? 4.0 : 2.2;
           final time = t == null ? null : t * speed;
+          final music = SpotMotion.musicOf(context);
           return Stack(
             clipBehavior: Clip.none,
             children: [
@@ -243,7 +244,11 @@ class _VoiceSpot extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: ShapeDecoration(
                       color: color.withValues(alpha: 0.7),
-                      shape: SpotBorder(seed: 'voice#1', time: time),
+                      shape: SpotBorder(
+                        seed: 'voice#1',
+                        time: time,
+                        music: music,
+                      ),
                     ),
                   ),
                 ),
@@ -256,7 +261,11 @@ class _VoiceSpot extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: ShapeDecoration(
                     color: color.withValues(alpha: 0.5),
-                    shape: SpotBorder(seed: 'voice#2', time: time),
+                    shape: SpotBorder(
+                      seed: 'voice#2',
+                      time: time,
+                      music: music,
+                    ),
                   ),
                 ),
               ),
@@ -272,7 +281,11 @@ class _VoiceSpot extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: ShapeDecoration(
                       color: color,
-                      shape: SpotBorder(seed: 'voice', time: time),
+                      shape: SpotBorder(
+                        seed: 'voice',
+                        time: time,
+                        music: music,
+                      ),
                     ),
                     child: Icon(icon, size: 36, color: AppColors.ink900),
                   ),

@@ -1,7 +1,7 @@
 name: yeen_music
 description: "Crocuta — lettore musicale che cerca su YouTube Music ed estrae solo l'audio."
 publish_to: 'none'
-version: 1.1.0+2
+version: 1.2.0+3
 
 environment:
   sdk: ^3.11.3

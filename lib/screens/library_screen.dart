@@ -345,7 +345,11 @@ class _WordRowState extends State<_WordRow> {
                 builder: (context, t) => DecoratedBox(
                   decoration: ShapeDecoration(
                     color: c.withValues(alpha: 0.5 - i * 0.12),
-                    shape: SpotBorder(seed: '${widget.label}#$i', time: t),
+                    shape: SpotBorder(
+                      seed: '${widget.label}#$i',
+                      time: t,
+                      music: SpotMotion.musicOf(context),
+                    ),
                   ),
                 ),
               ),

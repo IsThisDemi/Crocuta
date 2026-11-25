@@ -1042,6 +1042,19 @@ class StorageService {
   Future<void> setMotionCover(bool value) =>
       _stateBox.put('motion_cover', value);
 
+  /// Quanto si muovono le macchie con la musica in ascolto: 0 spente, 1
+  /// l'effetto di serie, fino a 2 il doppio.
+  double get spotsMusic =>
+      (_stateBox.get('spots_music_level') as num?)?.toDouble() ?? 1;
+
+  Future<void> setSpotsMusic(double value) =>
+      _stateBox.put('spots_music_level', value);
+
+  /// Anche i testi che crescono sui colpi della musica: spento di serie.
+  bool get textPulse => _stateBox.get('text_pulse') as bool? ?? false;
+
+  Future<void> setTextPulse(bool value) => _stateBox.put('text_pulse', value);
+
   /// L'identita' di questo dispositivo per Crocuta Connect: fissa, cosi'
   /// gli altri lo riconoscono anche se cambia indirizzo.
   String? get connectId => _stateBox.get('connect_id') as String?;
