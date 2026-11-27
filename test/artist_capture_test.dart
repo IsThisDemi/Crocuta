@@ -6,12 +6,12 @@ import 'package:flutter/foundation.dart' show SynchronousFuture;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/artist.dart';
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/screens/artist_screen.dart';
-import 'package:yeen_music/services/player_state.dart';
-import 'package:yeen_music/widgets/spot_controls.dart';
+import 'package:crocuta/models/artist.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/screens/artist_screen.dart';
+import 'package:crocuta/services/player_state.dart';
+import 'package:crocuta/widgets/spot_controls.dart';
 
 import 'support/capture.dart';
 import 'support/fake_player.dart';

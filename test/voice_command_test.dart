@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/voice_command.dart';
+import 'package:crocuta/services/voice_command.dart';
 
 void main() {
   VoiceCommand p(String s) => parseVoiceCommand(s);

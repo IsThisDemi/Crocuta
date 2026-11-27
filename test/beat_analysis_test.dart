@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/beat_analysis.dart';
+import 'package:crocuta/services/beat_analysis.dart';
 
 /// Una batteria finta: cassa sul primo battito di ogni battuta, charleston
 /// su tutti, silenzio prima e dopo.

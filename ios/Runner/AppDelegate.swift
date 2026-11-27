@@ -24,10 +24,11 @@ import UIKit
     // Lock screen / Control Center "Now Playing" controls.
     NowPlayingController.register(messenger: messenger)
     // Siri: indice della libreria in uscita, comandi degli App Intents in
-    // entrata (vedi YeenIntents.swift).
+    // entrata (vedi CrocutaIntents.swift).
     SiriBridge.register(messenger: messenger)
     // Il riconoscimento vocale dell'assistente interno.
     VoiceRecognizer.register(messenger: messenger)
+    AppleMusicReader.register(messenger: messenger)
     // I pulsanti del widget che fanno partire qualcosa: passano dalla
     // stessa casella dei comandi Siri, che Dart ritira quando e' pronto.
     CrocutaShared.command = { action, value in

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/screens/stats_screen.dart';
+import 'package:crocuta/screens/stats_screen.dart';
 
 void main() {
   test('il tempo di ascolto si legge, non si converte a mente', () {

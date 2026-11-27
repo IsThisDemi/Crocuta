@@ -2,11 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/lyrics.dart';
-import 'package:yeen_music/services/automix.dart';
-import 'package:yeen_music/services/beat_analysis.dart';
-import 'package:yeen_music/services/key_analysis.dart';
-import 'package:yeen_music/services/phrase_analysis.dart';
+import 'package:crocuta/models/lyrics.dart';
+import 'package:crocuta/services/automix.dart';
+import 'package:crocuta/services/beat_analysis.dart';
+import 'package:crocuta/services/key_analysis.dart';
+import 'package:crocuta/services/phrase_analysis.dart';
 
 import 'sectioned_grid.dart';
 

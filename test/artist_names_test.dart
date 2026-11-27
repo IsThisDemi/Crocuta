@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/artist_names.dart';
+import 'package:crocuta/models/artist_names.dart';
 
 void main() {
   group('dedupeFeatGroups', () {

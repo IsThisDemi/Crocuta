@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/app_theme.dart';
-import 'package:yeen_music/widgets/glass_surfaces.dart';
-import 'package:yeen_music/widgets/lifted_menu.dart';
+import 'package:crocuta/design/app_theme.dart';
+import 'package:crocuta/widgets/glass_surfaces.dart';
+import 'package:crocuta/widgets/lifted_menu.dart';
 
 void main() {
   const screen = Size(430, 932);

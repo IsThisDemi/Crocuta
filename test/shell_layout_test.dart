@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/screens/app_shell.dart';
-import 'package:yeen_music/services/player_state.dart';
-import 'package:yeen_music/widgets/den_rail.dart';
-import 'package:yeen_music/widgets/spot_controls.dart';
-import 'package:yeen_music/widgets/word_tab_bar.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/screens/app_shell.dart';
+import 'package:crocuta/services/player_state.dart';
+import 'package:crocuta/widgets/den_rail.dart';
+import 'package:crocuta/widgets/spot_controls.dart';
+import 'package:crocuta/widgets/word_tab_bar.dart';
 
 import 'support/capture.dart';
 import 'support/fake_player.dart';

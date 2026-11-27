@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/app_theme.dart';
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/screens/now_playing_screen.dart';
-import 'package:yeen_music/services/player_state.dart';
-import 'package:yeen_music/services/storage_service.dart';
-import 'package:yeen_music/widgets/app_background.dart';
+import 'package:crocuta/design/app_theme.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/screens/now_playing_screen.dart';
+import 'package:crocuta/services/player_state.dart';
+import 'package:crocuta/services/storage_service.dart';
+import 'package:crocuta/widgets/app_background.dart';
 
 import 'support/fake_player.dart';
 

@@ -50,8 +50,8 @@ app.*.map.json
 .env
 
 # Copia dello script Apps Script con il segreto gia' dentro, pronta da
-# incollare. Il modello versionato e' tool/yeen_sync.gs, col segnaposto.
-yeen_sync.local.gs
+# incollare. Il modello versionato e' tool/crocuta_sync.gs, col segnaposto.
+crocuta_sync.local.gs
 .playwright-mcp/
 assets/models/
 

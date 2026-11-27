@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/widgets/artwork_hero.dart';
+import 'package:crocuta/widgets/artwork_hero.dart';
 
 Widget art({bool enabled = true}) => ArtworkHero(
   url: '',

@@ -1,5 +1,5 @@
-import 'package:yeen_music/services/player_controller.dart';
-import 'package:yeen_music/services/player_state.dart';
+import 'package:crocuta/services/player_controller.dart';
+import 'package:crocuta/services/player_state.dart';
 
 /// A player that returns a canned state without opening libmpv or touching
 /// the network, so widgets that depend on playback can be rendered in a

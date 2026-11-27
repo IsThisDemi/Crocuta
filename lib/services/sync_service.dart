@@ -24,8 +24,8 @@ import 'listen_cap.dart';
 /// al momento della compilazione (`--dart-define-from-file=.env`) fa solo
 /// da valore iniziale, la prima volta che l'app parte.
 class SyncService {
-  static const _envUrl = String.fromEnvironment('YEEN_SYNC_URL');
-  static const _envSecret = String.fromEnvironment('YEEN_SYNC_SECRET');
+  static const _envUrl = String.fromEnvironment('CROCUTA_SYNC_URL');
+  static const _envSecret = String.fromEnvironment('CROCUTA_SYNC_SECRET');
 
   /// La configurazione in uso; le Impostazioni e la Libreria la ascoltano.
   static final config = ValueNotifier<SyncConfig>(const SyncConfig('', ''));

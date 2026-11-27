@@ -127,6 +127,8 @@ you slide a finger from one to the next.
 - Liked songs, playlists, albums, artists and downloads, all searchable
 - **Import from Spotify** in a couple of taps: likes, playlists, albums
   and followed artists
+- **Import from Apple Music**: your library and playlists, read from the
+  Music app on Mac and iPhone or from an exported library file
 - **Synced across your devices** through *your own* Google Drive: no
   accounts, no third-party servers ([how](docs/SYNC.md))
 

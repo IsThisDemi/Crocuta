@@ -29,7 +29,7 @@ import 'voice_assistant.dart';
 ///
 /// Su macOS e Windows il canale non esiste e ogni chiamata e' un no-op.
 class SiriService {
-  static const _channel = MethodChannel('yeen/siri');
+  static const _channel = MethodChannel('crocuta/siri');
 
   /// Quanti brani pubblicare. Siri genera una frase per ogni valore, quindi
   /// l'elenco non e' gratis: oltre il migliaio l'indicizzazione rallenta e

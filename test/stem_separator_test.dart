@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/stem_separator.dart';
+import 'package:crocuta/services/stem_separator.dart';
 
 /// Una rete che non separa niente: restituisce il mix intero come "voce".
 class _Identity implements SpectrogramNet {

@@ -4,9 +4,9 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/spot.dart';
-import 'package:yeen_music/services/beat_analysis.dart';
-import 'package:yeen_music/services/beat_pulse.dart';
+import 'package:crocuta/design/spot.dart';
+import 'package:crocuta/services/beat_analysis.dart';
+import 'package:crocuta/services/beat_pulse.dart';
 
 extension on BeatPulse {
   double at_(double t) => at(t).pulse;

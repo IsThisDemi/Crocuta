@@ -28,10 +28,11 @@
 		A38D45CA53961377A82E8C62 /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DCF6FCEAE6297F30BC614CD /* AppIntents.framework */; };
 		B931783B4ECD98AC047E999D /* CrocutaShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = D451C829E10600547B8464F2 /* CrocutaShared.swift */; };
 		D5A1C0302A11B0030011C001 /* GlassPlatformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A1C0312A11B0030011C002 /* GlassPlatformView.swift */; };
-		D5A1C0402A11B0030011C003 /* YeenIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A1C0412A11B0030011C004 /* YeenIntents.swift */; };
+		D5A1C0402A11B0030011C003 /* CrocutaIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A1C0412A11B0030011C004 /* CrocutaIntents.swift */; };
 		D5A1C0502A11B0030011C005 /* RoutePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A1C0512A11B0030011C006 /* RoutePickerView.swift */; };
 		E1C9CF2F787C1A760613EDCF /* VoiceRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D2DE1915525FE0C99FD8136 /* VoiceRecognizer.swift */; };
 		E81BD3626AC5BDB01B1380C9 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FAB5D824BCD6F2D53CDA83E /* Pods_Runner.framework */; };
+		FD4EDF891235C8E8D722CE84 /* AppleMusicReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77AC6D9C31D9731C7C9D168B /* AppleMusicReader.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -92,6 +93,7 @@
 		5D2DE1915525FE0C99FD8136 /* VoiceRecognizer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VoiceRecognizer.swift; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		77AC6D9C31D9731C7C9D168B /* AppleMusicReader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppleMusicReader.swift; sourceTree = "<group>"; };
 		7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
@@ -113,7 +115,7 @@
 		C1A5D1BD7ED3F838805401D0 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		D451C829E10600547B8464F2 /* CrocutaShared.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CrocutaShared.swift; sourceTree = "<group>"; };
 		D5A1C0312A11B0030011C002 /* GlassPlatformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassPlatformView.swift; sourceTree = "<group>"; };
-		D5A1C0412A11B0030011C004 /* YeenIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YeenIntents.swift; sourceTree = "<group>"; };
+		D5A1C0412A11B0030011C004 /* CrocutaIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrocutaIntents.swift; sourceTree = "<group>"; };
 		D5A1C0512A11B0030011C006 /* RoutePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutePickerView.swift; sourceTree = "<group>"; };
 		DED4AEF1DAABE629EABCB6C7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		F0BADD0BD07CE8D4AC4D0241 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
@@ -230,11 +232,12 @@
 				A1B2C3D51E8E89220040F4C2 /* NowPlayingController.swift */,
 				D5A1C0312A11B0030011C002 /* GlassPlatformView.swift */,
 				D5A1C0512A11B0030011C006 /* RoutePickerView.swift */,
-				D5A1C0412A11B0030011C004 /* YeenIntents.swift */,
+				D5A1C0412A11B0030011C004 /* CrocutaIntents.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				36C5428DC4FBC55F416EB59F /* Runner.entitlements */,
 				5D2DE1915525FE0C99FD8136 /* VoiceRecognizer.swift */,
+				77AC6D9C31D9731C7C9D168B /* AppleMusicReader.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -533,11 +536,12 @@
 				A1B2C3D41E8E89220040F4C2 /* NowPlayingController.swift in Sources */,
 				D5A1C0302A11B0030011C001 /* GlassPlatformView.swift in Sources */,
 				D5A1C0502A11B0030011C005 /* RoutePickerView.swift in Sources */,
-				D5A1C0402A11B0030011C003 /* YeenIntents.swift in Sources */,
+				D5A1C0402A11B0030011C003 /* CrocutaIntents.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
 				40C866F985326F100B1A5523 /* CrocutaShared.swift in Sources */,
 				E1C9CF2F787C1A760613EDCF /* VoiceRecognizer.swift in Sources */,
+				FD4EDF891235C8E8D722CE84 /* AppleMusicReader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -105,7 +105,9 @@ extension MixStageAudible on MixStage {
     // Il passa-alto si mangia i bassi fino a 300 Hz; il passa-basso gli
     // acuti da 16 kHz in giu', e sotto i 2,5 kHz anche i medi.
     final hp = highpass <= highpassOff ? 0.0 : cut(highpassOff, 300, highpass);
-    final lpHigh = lowpass >= lowpassOpen ? 0.0 : cut(lowpassOpen, 2000, lowpass);
+    final lpHigh = lowpass >= lowpassOpen
+        ? 0.0
+        : cut(lowpassOpen, 2000, lowpass);
     final lpMid = lowpass >= 2500 ? 0.0 : cut(2500, 300, lowpass);
     return (
       low: (volume * lin(low) * (1 - hp)).clamp(0.0, 1.0),

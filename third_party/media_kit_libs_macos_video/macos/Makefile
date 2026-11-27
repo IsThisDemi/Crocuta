@@ -1,4 +1,4 @@
-# Yeen Music: i framework sono quelli compilati da noi (libmpv v0.6.0 con i
+# Crocuta: i framework sono quelli compilati da noi (libmpv v0.6.0 con i
 # filtri audio di ffmpeg; vedi tool/build_libmpv.sh), gia' in Frameworks/.
 # Qui niente download: si preparano solo i collegamenti agli header di mpv.
 all: Frameworks/.symlinks

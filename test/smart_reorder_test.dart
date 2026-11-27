@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/key_analysis.dart';
-import 'package:yeen_music/services/smart_reorder.dart';
+import 'package:crocuta/services/key_analysis.dart';
+import 'package:crocuta/services/smart_reorder.dart';
 
 MixTraits t(double bpm, int pc, {bool minor = false}) =>
     MixTraits(bpm, MusicalKey(pc, minor));

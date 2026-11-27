@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/spot.dart';
+import 'package:crocuta/design/spot.dart';
 
 /// Le macchie vive: ondeggiano col tempo, ma senza saltare quando partono
 /// e senza uscire dal loro riquadro.

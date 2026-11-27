@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/connect.dart';
+import 'package:crocuta/services/connect.dart';
 
 void main() {
   test('prima gli indirizzi della rete di casa, per ultimi i link-local', () {

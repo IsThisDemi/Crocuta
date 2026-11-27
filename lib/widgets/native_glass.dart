@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 /// [fallback] is used wherever the native view is unavailable, so callers can
 /// swap the two and compare.
 class NativeGlass extends StatelessWidget {
-  static const _viewType = 'yeen/native_glass';
+  static const _viewType = 'crocuta/native_glass';
 
   final double radius;
   final Color? tint;

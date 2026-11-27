@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/services/follows_controller.dart';
-import 'package:yeen_music/services/siri_service.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/services/follows_controller.dart';
+import 'package:crocuta/services/siri_service.dart';
 
 Track song(String id, {String title = 'Brano', String artist = 'Tizio'}) =>
     Track(id: id, title: title, author: artist, thumbnailUrl: '');

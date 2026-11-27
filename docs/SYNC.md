@@ -14,7 +14,7 @@ addresses or secrets.
 
 1. Open [script.google.com](https://script.google.com) and create a new
    project.
-2. Paste the contents of [`tool/yeen_sync.gs`](../tool/yeen_sync.gs),
+2. Paste the contents of [`tool/crocuta_sync.gs`](../tool/crocuta_sync.gs),
    without changing anything.
 3. *Deploy → New deployment → Web app*, with **Execute as: Me** and **Who
    has access: Anyone**. Google asks you to authorize Drive access: it's

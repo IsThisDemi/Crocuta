@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
-import 'package:yeen_music/main.dart' as app;
-import 'package:yeen_music/models/track.dart' as track_model;
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/services/storage_service.dart';
+import 'package:crocuta/main.dart' as app;
+import 'package:crocuta/models/track.dart' as track_model;
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/services/storage_service.dart';
 
 /// Test end-to-end su macOS: ricerca reale + riproduzione completa.
 /// Verifica che una canzone superi il minuto senza tagli né riavvii.

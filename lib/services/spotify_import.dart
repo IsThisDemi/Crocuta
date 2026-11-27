@@ -413,7 +413,7 @@ String spotifyPlainTitle(String title) => title
 
 /// Le ricerche da fare per un brano, in ordine: col primo interprete,
 /// poi con tutti (su YouTube Music un brano a due nomi a volte e'
-/// schedato sotto il secondo). Come in tool/import_apple_music.dart.
+/// schedato sotto il secondo). Le stesse per l'import da Apple Music.
 List<String> spotifySongQueries(SpotifyTrack t) {
   final title = YouTubeService.stripFeaturing(spotifyPlainTitle(t.name));
   final first = t.artists.isEmpty ? '' : t.artists.first;

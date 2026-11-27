@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/artist.dart';
-import 'package:yeen_music/screens/home_content.dart';
-import 'package:yeen_music/services/follows_controller.dart';
+import 'package:crocuta/models/artist.dart';
+import 'package:crocuta/screens/home_content.dart';
+import 'package:crocuta/services/follows_controller.dart';
 
 NewRelease _r(String id, {DateTime? date, int? year}) => NewRelease(
   album: AlbumCard(browseId: id, title: id, subtitle: '', thumbnailUrl: ''),

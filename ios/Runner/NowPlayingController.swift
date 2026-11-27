@@ -6,8 +6,8 @@ import WidgetKit
 /// Bridges the Flutter player to the iOS lock screen / Control Center
 /// "Now Playing" widget.
 ///
-/// - Dart -> native: `demus/now_playing` channel, methods `update` / `clear`.
-/// - native -> Dart: `demus/remote_commands` channel, methods `play`, `pause`,
+/// - Dart -> native: `crocuta/now_playing` channel, methods `update` / `clear`.
+/// - native -> Dart: `crocuta/remote_commands` channel, methods `play`, `pause`,
 ///   `toggle`, `next`, `previous`, `seek` (with `position` in seconds).
 class NowPlayingController: NSObject {
   private let remoteChannel: FlutterMethodChannel
@@ -21,11 +21,11 @@ class NowPlayingController: NSObject {
 
   static func register(messenger: FlutterBinaryMessenger) {
     let channel = FlutterMethodChannel(
-      name: "demus/now_playing",
+      name: "crocuta/now_playing",
       binaryMessenger: messenger
     )
     let remote = FlutterMethodChannel(
-      name: "demus/remote_commands",
+      name: "crocuta/remote_commands",
       binaryMessenger: messenger
     )
     let instance = NowPlayingController(

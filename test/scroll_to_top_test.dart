@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/navigation.dart';
+import 'package:crocuta/navigation.dart';
 
 void main() {
   testWidgets('porta in cima la lista verticale, non le file orizzontali', (

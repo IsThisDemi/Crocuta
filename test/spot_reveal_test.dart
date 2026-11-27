@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/app_theme.dart';
-import 'package:yeen_music/design/motion.dart';
+import 'package:crocuta/design/app_theme.dart';
+import 'package:crocuta/design/motion.dart';
 
 /// Le pagine si aprono dentro una macchia che parte dal punto toccato.
 void main() {

@@ -8,7 +8,7 @@
 # media-kit/libmpv-darwin-build alla stessa versione che usa media_kit
 # (v0.6.0), aggiungendo solo i filtri — e le correzioni per compilare con
 # Xcode 26, cmake 4 e meson 1.12, strumenti che nel 2023 non esistevano.
-# Tutto sta in tool/libmpv/yeen-filters.patch.
+# Tutto sta in tool/libmpv/crocuta-filters.patch.
 #
 # Uso: ./tool/build_libmpv.sh [macos|ios|all]   (default: all)
 # Serve: brew install cmake go meson ninja
@@ -23,7 +23,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # La cartella di lavoro: i cross-file della patch ricevono il suo percorso
 # assoluto subito dopo il git apply.
 WORK="${LIBMPV_WORK:-$HOME/Docs/libmpv-build/libmpv-darwin-build}"
-VERSION=v0.6.0-yeen
+VERSION=v0.6.0-crocuta
 
 if [ ! -d "$WORK" ]; then
   mkdir -p "$(dirname "$WORK")"
@@ -33,7 +33,7 @@ cd "$WORK"
 if [ -z "$(git status --porcelain)" ]; then
   git fetch --depth 1 origin tag v0.6.0
   git checkout -q v0.6.0
-  git apply "$ROOT/tool/libmpv/yeen-filters.patch"
+  git apply "$ROOT/tool/libmpv/crocuta-filters.patch"
   # La patch lascia @WORK@ dove i cross-file vogliono il percorso assoluto
   # di compat/sincosf.h: lo si mette qui, per la macchina che compila.
   sed -i '' "s|@WORK@|$WORK|g" cross-files/*.ini

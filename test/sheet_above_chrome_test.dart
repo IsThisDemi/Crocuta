@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/app_theme.dart';
-import 'package:yeen_music/widgets/glass_surfaces.dart';
+import 'package:crocuta/design/app_theme.dart';
+import 'package:crocuta/widgets/glass_surfaces.dart';
 
 void main() {
   testWidgets('il foglio si apre sul navigator radice, non su quello del tab', (

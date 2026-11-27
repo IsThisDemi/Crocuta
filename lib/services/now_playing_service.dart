@@ -8,8 +8,8 @@ import '../models/track.dart';
 /// On platforms without the native side (macOS/Windows) every call is a
 /// silent no-op.
 class NowPlayingService {
-  static const _channel = MethodChannel('demus/now_playing');
-  static const _remote = MethodChannel('demus/remote_commands');
+  static const _channel = MethodChannel('crocuta/now_playing');
+  static const _remote = MethodChannel('crocuta/remote_commands');
 
   /// Invoked when the user hits play/pause/skip/seek on the lock screen
   /// or in Control Center. `position` is in seconds (only for `seek`).

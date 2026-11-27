@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/app_theme.dart';
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/screens/now_playing_screen.dart';
-import 'package:yeen_music/services/player_controller.dart';
-import 'package:yeen_music/services/player_state.dart';
-import 'package:yeen_music/services/storage_service.dart';
-import 'package:yeen_music/widgets/album_link.dart';
-import 'package:yeen_music/widgets/liquid.dart';
+import 'package:crocuta/design/app_theme.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/screens/now_playing_screen.dart';
+import 'package:crocuta/services/player_controller.dart';
+import 'package:crocuta/services/player_state.dart';
+import 'package:crocuta/services/storage_service.dart';
+import 'package:crocuta/widgets/album_link.dart';
+import 'package:crocuta/widgets/liquid.dart';
 
 /// Un player che si puo' far avanzare durante il test.
 class DrivablePlayer extends PlayerController {
@@ -43,7 +43,7 @@ void main() {
     late final StorageService storage;
     late final Directory dir;
     await tester.runAsync(() async {
-      dir = await Directory.systemTemp.createTemp('yeen_rebuild');
+      dir = await Directory.systemTemp.createTemp('crocuta_rebuild');
       storage = StorageService();
       await storage.init(path: dir.path);
     });
@@ -114,7 +114,7 @@ void main() {
     late final StorageService storage;
     late final Directory dir;
     await tester.runAsync(() async {
-      dir = await Directory.systemTemp.createTemp('yeen_glass');
+      dir = await Directory.systemTemp.createTemp('crocuta_glass');
       storage = StorageService();
       await storage.init(path: dir.path);
     });
@@ -169,7 +169,7 @@ void main() {
     late final StorageService storage;
     late final Directory dir;
     await tester.runAsync(() async {
-      dir = await Directory.systemTemp.createTemp('yeen_scale');
+      dir = await Directory.systemTemp.createTemp('crocuta_scale');
       storage = StorageService();
       await storage.init(path: dir.path);
     });

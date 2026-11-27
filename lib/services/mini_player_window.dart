@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 /// Il mini player del Mac, la finestrina che resta sopra le altre app.
 ///
 /// La finestra e' nativa (macos/Runner/MiniPlayerController.swift) e prende
-/// i dati dallo stesso `demus/now_playing` del Centro di Controllo: da qui
+/// i dati dallo stesso `crocuta/now_playing` del Centro di Controllo: da qui
 /// la si apre e la si chiude soltanto. Altrove non esiste, e ogni chiamata
 /// non fa niente.
 class MiniPlayerWindow {

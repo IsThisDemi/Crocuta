@@ -39,7 +39,7 @@ final class RoutePickerView: NSObject, FlutterPlatformView {
 }
 
 final class RoutePickerViewFactory: NSObject, FlutterPlatformViewFactory {
-  static let viewType = "yeen/route_picker"
+  static let viewType = "crocuta/route_picker"
 
   func create(
     withFrame frame: CGRect,

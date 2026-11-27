@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -10,6 +12,8 @@ import '../design/spot.dart';
 import '../design/chrome.dart';
 import '../models/track.dart';
 import '../providers.dart';
+import '../services/apple_music_import_controller.dart';
+import '../services/apple_music_library.dart' show AppleMusicReader;
 import '../services/spotify_api.dart';
 import '../services/spotify_auth.dart';
 import '../services/spotify_import.dart';
@@ -21,16 +25,34 @@ import '../widgets/thumbnail.dart';
 import '../widgets/toast.dart';
 
 const _spotifyGreen = Color(0xFF1DB954);
+const _appleRed = Color(0xFFFA2D48);
 
-/// Porta in Crocuta la libreria di Spotify, scegliendo cosa.
+/// Da dove si importa.
+enum ImportService { spotify, appleMusic }
+
+/// Porta in Crocuta la libreria di Apple Music: la stessa pagina di
+/// Spotify, con un primo passo diverso (vedi [SpotifyImportScreen]).
+class AppleMusicImportScreen extends StatelessWidget {
+  const AppleMusicImportScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      const SpotifyImportScreen(service: ImportService.appleMusic);
+}
+
+/// Porta in Crocuta la libreria di Spotify (o di Apple Music), scegliendo
+/// cosa.
 ///
-/// Quattro momenti nella stessa pagina, uno alla volta: il Client ID con
-/// le istruzioni per crearlo, la scelta di cosa importare, l'avanzamento,
-/// il riepilogo coi brani non trovati. Quale mostrare lo dice lo stato del
-/// controller, che vive fuori dalla pagina: chiudendola l'import continua,
-/// e riaprendola si ritrova dov'era.
+/// Quattro momenti nella stessa pagina, uno alla volta: come leggere la
+/// libreria (per Spotify il Client ID con le istruzioni per crearlo, per
+/// Apple Music l'app Musica o un file esportato), la scelta di cosa
+/// importare, l'avanzamento, il riepilogo coi brani non trovati. Quale
+/// mostrare lo dice lo stato del controller, che vive fuori dalla pagina:
+/// chiudendola l'import continua, e riaprendola si ritrova dov'era.
 class SpotifyImportScreen extends ConsumerStatefulWidget {
-  const SpotifyImportScreen({super.key});
+  final ImportService service;
+
+  const SpotifyImportScreen({super.key, this.service = ImportService.spotify});
 
   @override
   ConsumerState<SpotifyImportScreen> createState() =>
@@ -40,12 +62,25 @@ class SpotifyImportScreen extends ConsumerStatefulWidget {
 class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
   late final TextEditingController _clientId;
 
-  SpotifyImportController get _ctrl => ref.read(spotifyImportProvider.notifier);
+  bool get _apple => widget.service == ImportService.appleMusic;
+
+  NotifierProvider<LibraryImportController, SpotifyImportView> get _provider =>
+      _apple ? appleMusicImportProvider : spotifyImportProvider;
+
+  LibraryImportController get _ctrl => ref.read(_provider.notifier);
+
+  /// Solo per Spotify: l'accesso.
+  SpotifyImportController get _spotify =>
+      ref.read(spotifyImportProvider.notifier);
+
+  Color get _brand => _apple ? _appleRed : _spotifyGreen;
+
+  String get _brandName => _apple ? 'Apple Music' : 'Spotify';
 
   @override
   void initState() {
     super.initState();
-    final view = ref.read(spotifyImportProvider);
+    final view = ref.read(_provider);
     _clientId = TextEditingController(text: view.clientId ?? '');
     // Collegati ma senza libreria (pagina appena aperta): la si legge.
     if (view.connected &&
@@ -71,14 +106,14 @@ class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
       );
       return false;
     }
-    await _ctrl.setClientId(id);
+    await _spotify.setClientId(id);
     return true;
   }
 
   /// L'accesso nella web view: la pagina di Spotify, e al ritorno il codice.
   Future<void> _connect() async {
     if (!await _saveClientId() || !mounted) return;
-    final login = _ctrl.startLogin();
+    final login = _spotify.startLogin();
     final result = await Navigator.of(context, rootNavigator: true)
         .push<SpotifyRedirect>(
           MaterialPageRoute(
@@ -91,14 +126,14 @@ class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
       _ctrl.showError(result.error!);
       return;
     }
-    await _ctrl.finishLogin(result.code!, login.verifier);
+    await _spotify.finishLogin(result.code!, login.verifier);
   }
 
   /// L'accesso nel browser, per chi entra in Spotify con Google o Apple:
   /// quelle pagine non si aprono dentro una web view.
   Future<void> _connectInBrowser() async {
     if (!await _saveClientId() || !mounted) return;
-    final login = _ctrl.startLogin();
+    final login = _spotify.startLogin();
     await Clipboard.setData(ClipboardData(text: login.url.toString()));
     if (!mounted) return;
     final pasted = await showGlassTextPrompt(
@@ -125,7 +160,7 @@ class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
       _ctrl.showError(result.error!);
       return;
     }
-    await _ctrl.finishLogin(result.code!, login.verifier);
+    await _spotify.finishLogin(result.code!, login.verifier);
   }
 
   Future<void> _disconnect() async {
@@ -138,7 +173,7 @@ class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
       confirmLabel: 'Disconnect',
       destructive: true,
     );
-    if (ok) await _ctrl.disconnect();
+    if (ok) await _spotify.disconnect();
   }
 
   Future<void> _discard(SpotifyImportState job) async {
@@ -169,7 +204,7 @@ class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final view = ref.watch(spotifyImportProvider);
+    final view = ref.watch(_provider);
     final job = view.job;
 
     final List<Widget> children;
@@ -180,17 +215,23 @@ class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
     } else if (job != null) {
       children = _summary(view, job);
     } else if (!view.connected) {
-      children = _setup(view);
+      children = _apple ? _appleSetup(view) : _setup(view);
     } else {
       children = _chooser(view);
     }
 
     return SubPage(
-      title: 'Import from Spotify',
+      title: 'Import from $_brandName',
       maxWidth: 620,
       actions: [
-        if (view.connected && !view.running)
+        if (view.connected && !view.running && !_apple)
           TextButton(onPressed: _disconnect, child: const Text('Disconnect')),
+        if (view.connected && !view.running && _apple && view.job == null)
+          TextButton(
+            onPressed: () =>
+                ref.read(appleMusicImportProvider.notifier).disconnect(),
+            child: const Text('Change Source'),
+          ),
       ],
       child: ContentWidth(
         child: ListView(
@@ -403,6 +444,111 @@ class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
 
   // --- Cosa importare ------------------------------------------------------
 
+  // --- Apple Music: da dove leggere -------------------------------------------
+
+  Future<void> _openFile() async {
+    const group = XTypeGroup(
+      label: 'Music library',
+      extensions: ['xml', 'json'],
+      uniformTypeIdentifiers: ['public.xml', 'public.json'],
+      mimeTypes: ['text/xml', 'application/xml', 'application/json'],
+    );
+    final file = await openFile(acceptedTypeGroups: const [group]);
+    if (file == null) return;
+    await ref
+        .read(appleMusicImportProvider.notifier)
+        .loadFile(file.name, file.readAsString);
+  }
+
+  List<Widget> _appleSetup(SpotifyImportView view) {
+    final muted = context.colors.textMuted;
+    final native = AppleMusicReader.isSupported;
+    final where = Platform.isIOS ? 'this iPhone' : 'this Mac';
+    Widget line(String text) => Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
+      child: Text(text, style: context.texts.bodyMedium),
+    );
+
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+        child: Text(
+          'Bring your Apple Music library and playlists into Crocuta. Each '
+          'song is found on YouTube Music; nothing changes in Apple Music.',
+          style: context.texts.bodyMedium?.copyWith(color: muted),
+        ),
+      ),
+      if (native)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.gutter,
+            AppSpacing.lg,
+            AppSpacing.gutter,
+            0,
+          ),
+          child: Column(
+            children: [
+              _PillButton(
+                primary: true,
+                icon: Icons.library_music_rounded,
+                label: view.loadingLibrary
+                    ? 'Reading…'
+                    : 'Read the Music Library on ${Platform.isIOS ? 'iPhone' : 'Mac'}',
+                onPressed: view.loadingLibrary ? null : _ctrl.loadLibrary,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Crocuta reads the library of the Music app on $where, once '
+                'you allow it. With Sync Library on, that is everything you '
+                'added from Apple Music.',
+                textAlign: TextAlign.center,
+                style: context.texts.bodySmall?.copyWith(color: muted),
+              ),
+            ],
+          ),
+        ),
+      _Section(
+        header: native ? 'Or Open an Exported Library' : 'Export Your Library',
+        footer:
+            'A single playlist works too: File › Library › Export '
+            'Playlist…, in XML format.',
+        children: [
+          line(
+            'On a Mac, open Music and choose File › Library › Export '
+            'Library…',
+          ),
+          line(
+            'On Windows, open iTunes and choose File › Library › Export '
+            'Library… The Apple Music app for Windows cannot export.',
+          ),
+          line(
+            'Save the file (Library.xml) where this device can open it, '
+            'then open it here.',
+          ),
+        ],
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.gutter,
+          AppSpacing.md,
+          AppSpacing.gutter,
+          0,
+        ),
+        child: _PillButton(
+          primary: !native,
+          icon: Icons.file_open_rounded,
+          label: 'Open a Library File…',
+          onPressed: view.loadingLibrary ? null : _openFile,
+        ),
+      ),
+    ];
+  }
+
   List<Widget> _chooser(SpotifyImportView view) {
     final library = view.library;
     final muted = context.colors.textMuted;
@@ -416,7 +562,7 @@ class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
                 const CircularProgressIndicator(),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  'Reading your Spotify library…',
+                  'Reading your $_brandName library…',
                   style: context.texts.bodyMedium?.copyWith(color: muted),
                 ),
               ] else
@@ -466,7 +612,11 @@ class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
         child: Text(
-          'Signed in as ${library.user.name}. Choose what to bring over.',
+          [
+            if (library.user case final user?) 'Signed in as ${user.name}.',
+            ?library.note,
+            'Choose what to bring over.',
+          ].join(' '),
           style: context.texts.bodyMedium?.copyWith(color: muted),
         ),
       ),
@@ -506,11 +656,14 @@ class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
       ),
       _Section(
         header: 'Songs',
-        footer:
-            'Liked Songs become your favorites in Crocuta, newest first, '
-            'below the ones you already have.',
+        footer: _apple
+            ? 'The songs in your library become your favorites in Crocuta, '
+                  'newest first, below the ones you already have.'
+            : 'Liked Songs become your favorites in Crocuta, newest first, '
+                  'below the ones you already have.',
         children: [
           _SourceRow(
+            apple: _apple,
             source: library.liked,
             selected: selected.contains(library.liked.key),
             onTap: () => _ctrl.toggle(library.liked.key),
@@ -546,7 +699,7 @@ class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
     final p = view.progress;
     final muted = context.colors.textMuted;
     final phase = switch (p?.phase) {
-      SpotifyImportPhase.reading => 'Reading from Spotify',
+      SpotifyImportPhase.reading => 'Reading from $_brandName',
       SpotifyImportPhase.matching => 'Finding songs on YouTube Music',
       SpotifyImportPhase.albums => 'Finding albums',
       SpotifyImportPhase.artists => 'Finding artists',
@@ -576,7 +729,7 @@ class _SpotifyImportScreenState extends ConsumerState<SpotifyImportScreen> {
                   child: LinearProgressIndicator(
                     value: fraction,
                     minHeight: 6,
-                    color: _spotifyGreen,
+                    color: _brand,
                     backgroundColor: Colors.white.withValues(alpha: 0.1),
                   ),
                 ),
@@ -998,10 +1151,15 @@ class _SourceRow extends StatelessWidget {
   final bool? selected;
   final VoidCallback? onTap;
 
+  /// I brani della libreria di Apple Music, invece dei piaciuti di
+  /// Spotify: la nota sul rosso di Apple, non il cuore sul viola.
+  final bool apple;
+
   const _SourceRow({
     required this.source,
     required this.selected,
     required this.onTap,
+    this.apple = false,
   });
 
   String get _subtitle {
@@ -1012,6 +1170,8 @@ class _SourceRow extends StatelessWidget {
       SpotifySourceKind.playlist =>
         source.restricted
             ? 'By ${source.subtitle} · Spotify may not share its songs'
+            : source.subtitle.isEmpty
+            ? songs
             : '$songs · ${source.subtitle}',
       SpotifySourceKind.album => source.subtitle,
       SpotifySourceKind.artist => 'Artist',
@@ -1023,15 +1183,17 @@ class _SourceRow extends StatelessWidget {
     final muted = context.colors.textMuted;
     final Widget cover = switch (source.kind) {
       SpotifySourceKind.liked => Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF4B33CC), Color(0xFF9E8BFF)],
+            colors: apple
+                ? const [Color(0xFFFA2D48), Color(0xFFFF7A8A)]
+                : const [Color(0xFF4B33CC), Color(0xFF9E8BFF)],
           ),
         ),
-        child: const Icon(
-          Icons.favorite_rounded,
+        child: Icon(
+          apple ? Icons.music_note_rounded : Icons.favorite_rounded,
           color: Colors.white,
           size: 20,
         ),

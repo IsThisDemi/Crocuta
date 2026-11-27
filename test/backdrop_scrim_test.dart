@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/tokens.dart';
-import 'package:yeen_music/widgets/artwork_backdrop.dart';
+import 'package:crocuta/design/tokens.dart';
+import 'package:crocuta/widgets/artwork_backdrop.dart';
 
 /// Il contrasto WCAG fra due colori.
 double contrast(Color a, Color b) {

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yeen_music/services/sync_service.dart';
+import 'package:crocuta/services/sync_service.dart';
 
 void main() {
   test('il codice di configurazione riporta indirizzo e segreto', () {

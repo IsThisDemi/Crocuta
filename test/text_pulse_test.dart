@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/spot.dart';
-import 'package:yeen_music/design/text_pulse.dart';
+import 'package:crocuta/design/spot.dart';
+import 'package:crocuta/design/text_pulse.dart';
 
 /// I testi che pulsano: crescono sui colpi solo se accesi, e accenderli o
 /// spegnerli non ricrea cio' che sta sotto.

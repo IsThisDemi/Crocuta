@@ -32,7 +32,7 @@ class AirPlayButton extends StatelessWidget {
     this.tint,
   });
 
-  static const _viewType = 'yeen/route_picker';
+  static const _viewType = 'crocuta/route_picker';
 
   static bool get isAvailable {
     if (!Platform.isIOS && !Platform.isMacOS) return false;

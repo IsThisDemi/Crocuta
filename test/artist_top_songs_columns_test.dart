@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yeen_music/screens/artist_screen.dart';
+import 'package:crocuta/screens/artist_screen.dart';
 
 void main() {
   test('una colonna su telefono', () {

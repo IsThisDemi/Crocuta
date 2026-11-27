@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/services/youtube_service.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/services/youtube_service.dart';
 
 void main() {
   // I risultati veri della ricerca "Songs" per "PinkPantheress Romeo".

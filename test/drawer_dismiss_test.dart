@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/widgets/drawer_dismiss.dart';
+import 'package:crocuta/widgets/drawer_dismiss.dart';
 
 /// Apre una route con dentro il cassetto, una maniglia in cima e una lista
 /// lunga sotto — la forma della schermata in riproduzione.

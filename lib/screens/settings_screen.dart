@@ -10,6 +10,7 @@ import '../design/chrome.dart';
 import '../providers.dart';
 import '../services/connect.dart';
 import '../services/discovery_controller.dart';
+import '../services/apple_music_import_controller.dart';
 import '../services/spotify_import_controller.dart';
 import '../services/sync_service.dart';
 import '../widgets/content_width.dart';
@@ -201,6 +202,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final connectOn = ref.read(storageServiceProvider).connectEnabled;
     final lastSync = ref.watch(lastSyncProvider);
     final spotify = ref.watch(spotifyImportProvider);
+    final apple = ref.watch(appleMusicImportProvider);
+    // Un import in corso o fermo si vede anche da qui: si puo' lasciare
+    // la pagina mentre lavora.
+    String? importStatus(SpotifyImportView v) => switch (v) {
+      SpotifyImportView(running: true, :final progress?)
+          when progress.total > 0 =>
+        '${progress.done}/${progress.total}',
+      SpotifyImportView(running: true) => 'Importing…',
+      SpotifyImportView(:final job?) when !job.finished => 'Paused',
+      _ => null,
+    };
     // Verde di sistema e non l'accento della copertina. L'accento e' tarato
     // per essere chiaro (testo e icone sul fondo scuro), quindi su una
     // copertina poco satura usciva un azzurrino o un grigio: acceso e
@@ -360,24 +372,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _Group(
               header: 'Library',
               footer:
-                  'Bring your Liked Songs, playlists, saved albums and '
-                  'followed artists over from Spotify.',
+                  'Bring your songs and playlists over from Spotify or Apple '
+                  'Music; from Spotify also saved albums and followed '
+                  'artists.',
               rows: [
                 _Row(
                   icon: Icons.download_rounded,
                   color: const Color(0xFF1DB954),
                   title: 'Import from Spotify',
-                  // Un import in corso o fermo si vede anche da qui: si
-                  // puo' lasciare la pagina mentre lavora.
-                  value: switch (spotify) {
-                    SpotifyImportView(running: true, :final progress?)
-                        when progress.total > 0 =>
-                      '${progress.done}/${progress.total}',
-                    SpotifyImportView(running: true) => 'Importing…',
-                    SpotifyImportView(:final job?) when !job.finished =>
-                      'Paused',
-                    _ => null,
-                  },
+                  value: importStatus(spotify),
                   trailing: Icon(
                     Icons.chevron_right_rounded,
                     color: context.colors.textFaint,
@@ -385,6 +388,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const SpotifyImportScreen(),
+                    ),
+                  ),
+                ),
+                _Row(
+                  icon: Icons.download_rounded,
+                  color: const Color(0xFFFA2D48),
+                  title: 'Import from Apple Music',
+                  value: importStatus(apple),
+                  trailing: Icon(
+                    Icons.chevron_right_rounded,
+                    color: context.colors.textFaint,
+                  ),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const AppleMusicImportScreen(),
                     ),
                   ),
                 ),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/accent.dart';
-import 'package:yeen_music/design/app_theme.dart';
+import 'package:crocuta/design/accent.dart';
+import 'package:crocuta/design/app_theme.dart';
 
 // I colori hanno canali a 8 bit, quindi il giro Color -> HSL -> Color -> HSL
 // non restituisce mai il valore esatto del clamp: 0.72 torna come 0.7216.

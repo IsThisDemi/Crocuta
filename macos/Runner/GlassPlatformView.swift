@@ -82,7 +82,7 @@ private class CapsuleGlassView: NSGlassEffectView {
 }
 
 class GlassPlatformViewFactory: NSObject, FlutterPlatformViewFactory {
-  static let viewType = "yeen/native_glass"
+  static let viewType = "crocuta/native_glass"
 
   private let messenger: FlutterBinaryMessenger
 

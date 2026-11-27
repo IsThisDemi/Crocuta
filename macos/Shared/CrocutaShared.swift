@@ -73,7 +73,7 @@ enum CrocutaShared {
   /// sandbox, puo' mandarle, e l'app le ascolta. Sul Mac i comandi di un
   /// widget girano nel widget, non nell'app.
   static func notificationName(_ command: String) -> String {
-    "com.personal.demusLike.widget.\(command)"
+    "crocuta.widget.\(command)"
   }
 
   static let commands = ["toggle", "next", "previous"]

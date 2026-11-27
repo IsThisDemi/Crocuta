@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yeen_music/services/automix.dart';
-import 'package:yeen_music/services/beat_analysis.dart';
-import 'package:yeen_music/services/mix_info.dart';
-import 'package:yeen_music/services/waveform.dart';
+import 'package:crocuta/services/automix.dart';
+import 'package:crocuta/services/beat_analysis.dart';
+import 'package:crocuta/services/mix_info.dart';
+import 'package:crocuta/services/waveform.dart';
 
 /// Un brano compresso come quelli veri: medi e acuti quasi fermi, e i
 /// bassi che spariscono in uno stacco a meta'.

@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/artist.dart';
-import 'package:yeen_music/models/explore.dart';
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/screens/browse_screens.dart';
-import 'package:yeen_music/screens/search_screen.dart';
-import 'package:yeen_music/services/player_state.dart';
-import 'package:yeen_music/widgets/large_title.dart';
-import 'package:yeen_music/widgets/track_tile.dart';
+import 'package:crocuta/models/artist.dart';
+import 'package:crocuta/models/explore.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/screens/browse_screens.dart';
+import 'package:crocuta/screens/search_screen.dart';
+import 'package:crocuta/services/player_state.dart';
+import 'package:crocuta/widgets/large_title.dart';
+import 'package:crocuta/widgets/track_tile.dart';
 
 import 'support/capture.dart';
 import 'support/fake_player.dart';

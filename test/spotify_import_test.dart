@@ -4,11 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
-import 'package:yeen_music/models/artist.dart';
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/services/spotify_api.dart';
-import 'package:yeen_music/services/spotify_auth.dart';
-import 'package:yeen_music/services/spotify_import.dart';
+import 'package:crocuta/models/artist.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/services/spotify_api.dart';
+import 'package:crocuta/services/spotify_auth.dart';
+import 'package:crocuta/services/spotify_import.dart';
 
 // Niente rete vera: Spotify e' un MockClient, YouTube Music un catalogo
 // finto.

@@ -6,11 +6,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/app_theme.dart';
-import 'package:yeen_music/widgets/app_background.dart';
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/services/storage_service.dart';
-import 'package:yeen_music/widgets/toast.dart';
+import 'package:crocuta/design/app_theme.dart';
+import 'package:crocuta/widgets/app_background.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/services/storage_service.dart';
+import 'package:crocuta/widgets/toast.dart';
 
 /// Renders a screen off-screen and writes what it actually looks like to a
 /// PNG, so a layout can be inspected instead of guessed at.
@@ -45,7 +45,7 @@ Future<void> capture(
   late final StorageService storage;
   late final Directory hiveDir;
   await tester.runAsync(() async {
-    hiveDir = await Directory.systemTemp.createTemp('demus_capture');
+    hiveDir = await Directory.systemTemp.createTemp('crocuta_capture');
     storage = StorageService();
     await storage.init(path: hiveDir.path);
   });

@@ -4,13 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:media_kit/media_kit.dart';
 
-import 'package:yeen_music/main.dart' as app;
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/screens/home_content.dart';
-import 'package:yeen_music/screens/library_screen.dart';
-import 'package:yeen_music/screens/queue_screen.dart';
-import 'package:yeen_music/screens/search_screen.dart';
-import 'package:yeen_music/services/storage_service.dart';
+import 'package:crocuta/main.dart' as app;
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/screens/home_content.dart';
+import 'package:crocuta/screens/library_screen.dart';
+import 'package:crocuta/screens/queue_screen.dart';
+import 'package:crocuta/screens/search_screen.dart';
+import 'package:crocuta/services/storage_service.dart';
 
 /// Smoke test della UI: percorre ogni tab e ogni sotto-schermata della
 /// libreria e fallisce se una qualsiasi lancia un'eccezione durante il build.

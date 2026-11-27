@@ -1127,4 +1127,13 @@ class StorageService {
   Future<void> setSpotifyImport(String? json) => json == null
       ? _stateBox.delete('spotify_import')
       : _stateBox.put('spotify_import', json);
+
+  /// L'import da Apple Music in corso o l'ultimo finito, come
+  /// SpotifyImportState: lo stesso lavoro, un'altra fonte.
+  String? get appleMusicImport =>
+      _stateBox.get('apple_music_import') as String?;
+
+  Future<void> setAppleMusicImport(String? json) => json == null
+      ? _stateBox.delete('apple_music_import')
+      : _stateBox.put('apple_music_import', json);
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/tokens.dart';
-import 'package:yeen_music/widgets/glass_surfaces.dart';
+import 'package:crocuta/design/tokens.dart';
+import 'package:crocuta/widgets/glass_surfaces.dart';
 
 import 'support/capture.dart';
 

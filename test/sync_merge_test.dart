@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yeen_music/services/sync_service.dart';
+import 'package:crocuta/services/sync_service.dart';
 
 Map<String, dynamic> _track(String id, {String title = 't'}) => {
   'id': id,

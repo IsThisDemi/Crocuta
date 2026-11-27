@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/artist.dart';
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/screens/replay_story.dart';
-import 'package:yeen_music/services/replay.dart';
+import 'package:crocuta/models/artist.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/screens/replay_story.dart';
+import 'package:crocuta/services/replay.dart';
 
 import 'support/capture.dart';
 

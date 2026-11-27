@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/shuffle_order.dart';
+import 'package:crocuta/services/shuffle_order.dart';
 
 void main() {
   test('rimescolati, tutti e una volta sola', () {

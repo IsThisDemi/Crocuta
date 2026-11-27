@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/beat_net.dart';
+import 'package:crocuta/services/beat_net.dart';
 
 void main() {
   // Tre minuti a 95 BPM, battere sul terzo battito, con i difetti di una

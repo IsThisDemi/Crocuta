@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/beat_analysis.dart';
-import 'package:yeen_music/services/phrase_analysis.dart';
+import 'package:crocuta/services/beat_analysis.dart';
+import 'package:crocuta/services/phrase_analysis.dart';
 
 import 'sectioned_grid.dart';
 

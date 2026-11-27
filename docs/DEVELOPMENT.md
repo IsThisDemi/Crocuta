@@ -122,7 +122,7 @@ The app is set up for **background audio** on iOS
 | Connect | **Bonjour** (`bonsoir`) + WebSocket, authenticated with the sync secret |
 | Native on iPhone and Mac | WidgetKit, App Intents, MPNowPlayingInfoCenter |
 | State and data | Riverpod, Hive |
-| Sync | A Google Apps Script on your Drive (`tool/yeen_sync.gs`), see [SYNC.md](SYNC.md) |
+| Sync | A Google Apps Script on your Drive (`tool/crocuta_sync.gs`), see [SYNC.md](SYNC.md) |
 
 ### libmpv with the audio filters
 
@@ -131,7 +131,7 @@ AutoMix needs `volume`, `highpass`, `alimiter`, `atempo` and more. The
 frameworks in `third_party/media_kit_libs_{macos,ios}_video` are rebuilt by
 `./tool/build_libmpv.sh` (about twenty minutes per platform; needs
 `brew install cmake go meson ninja`). Everything it changes is in
-`tool/libmpv/yeen-filters.patch`.
+`tool/libmpv/crocuta-filters.patch`.
 
 ### Project layout
 
@@ -165,6 +165,7 @@ lib/
 │   ├── discovery.dart             # Discover Weekly and Daily Mixes
 │   ├── smart_playlists.dart       # On Repeat, Late Night, Forgotten…
 │   ├── spotify_import.dart        # likes, playlists, albums, artists from Spotify
+│   ├── apple_music_library.dart   # Apple Music library: Music app or exported XML
 │   ├── connect.dart               # Crocuta Connect (Bonjour + WebSocket)
 │   ├── sync_service.dart          # sync through Google Apps Script
 │   ├── siri_service.dart          # the library Siri can name
@@ -248,7 +249,7 @@ phrase doesn't carry the value, Siri asks for it right after, and at that
 point the text is free.
 
 The phrases are in Italian ("Riproduci i preferiti su Crocuta") and live in
-`ios/Runner/YeenIntents.swift`; after installing they also show up in the
+`ios/Runner/CrocutaIntents.swift`; after installing they also show up in the
 Shortcuts app. Requires **iOS 17**.
 
 ## Known limitations

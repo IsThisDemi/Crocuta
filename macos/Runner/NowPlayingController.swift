@@ -9,8 +9,8 @@ import WidgetKit
 /// Ported from `ios/Runner/NowPlayingController.swift`, which it mirrors
 /// channel for channel, so the Dart side needs no changes at all:
 ///
-/// - Dart -> native: `demus/now_playing`, methods `update` / `clear`.
-/// - native -> Dart: `demus/remote_commands`, methods `play`, `pause`,
+/// - Dart -> native: `crocuta/now_playing`, methods `update` / `clear`.
+/// - native -> Dart: `crocuta/remote_commands`, methods `play`, `pause`,
 ///   `toggle`, `next`, `previous`, `seek` (with `position` in seconds).
 ///
 /// Three deliberate differences from the iOS version:
@@ -39,11 +39,11 @@ class NowPlayingController: NSObject {
 
   static func register(messenger: FlutterBinaryMessenger) {
     let channel = FlutterMethodChannel(
-      name: "demus/now_playing",
+      name: "crocuta/now_playing",
       binaryMessenger: messenger
     )
     let remote = FlutterMethodChannel(
-      name: "demus/remote_commands",
+      name: "crocuta/remote_commands",
       binaryMessenger: messenger
     )
     let instance = NowPlayingController(

@@ -1,5 +1,5 @@
-import 'package:yeen_music/services/beat_analysis.dart';
-import 'package:yeen_music/services/key_analysis.dart';
+import 'package:crocuta/services/beat_analysis.dart';
+import 'package:crocuta/services/key_analysis.dart';
 
 /// Una sezione di un brano finto: quante battute, il volume e i bassi.
 typedef FakeSection = ({int bars, double level, double low});

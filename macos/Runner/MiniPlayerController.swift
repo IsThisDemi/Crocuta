@@ -7,9 +7,9 @@ import SwiftUI
 /// E' nativo, non una seconda finestra Flutter: un secondo motore Flutter
 /// costa decine di MB e uno stato da tenere in sincronia, mentre tutto quello
 /// che serve qui (titolo, artista, copertina, posizione, play) arriva gia'
-/// dal canale `demus/now_playing` che alimenta il Centro di Controllo.
+/// dal canale `crocuta/now_playing` che alimenta il Centro di Controllo.
 /// `NowPlayingController` lo gira anche a noi, e i comandi tornano a Dart
-/// dalla stessa strada dei tasti F7–F9 (`demus/remote_commands`): il player
+/// dalla stessa strada dei tasti F7–F9 (`crocuta/remote_commands`): il player
 /// non sa nemmeno che il mini player esiste.
 ///
 /// La finestra e' un `NSPanel` *non attivante*, ed e' una scelta voluta: il

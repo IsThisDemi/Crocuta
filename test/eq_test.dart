@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/app_theme.dart';
-import 'package:yeen_music/screens/eq_screen.dart';
-import 'package:yeen_music/services/eq_controller.dart';
+import 'package:crocuta/design/app_theme.dart';
+import 'package:crocuta/screens/eq_screen.dart';
+import 'package:crocuta/services/eq_controller.dart';
 
 EqState _with(List<double> gains, {double preamp = 0, bool on = true}) =>
     EqState(

@@ -54,6 +54,10 @@ class MainFlutterWindow: NSWindow {
       messenger: flutterViewController.engine.binaryMessenger
     )
     if !CrocutaDebug.hiddenWindow { GlobalHotKeys.shared.register() }
+    // La libreria dell'app Musica, per l'import da Apple Music.
+    AppleMusicReader.register(
+      messenger: flutterViewController.engine.binaryMessenger
+    )
     // Il riconoscimento vocale dell'assistente interno, col microfono del
     // Mac e non quello degli AirPods.
     VoiceRecognizer.register(

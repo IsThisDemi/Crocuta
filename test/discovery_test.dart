@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/services/discovery.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/services/discovery.dart';
 
 Track t(String id, [String artist = 'x']) =>
     Track(id: id, title: id, author: artist, thumbnailUrl: '');

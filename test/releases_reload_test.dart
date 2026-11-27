@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/artist.dart';
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/services/follows_controller.dart';
-import 'package:yeen_music/services/storage_service.dart';
-import 'package:yeen_music/services/youtube_service.dart';
+import 'package:crocuta/models/artist.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/services/follows_controller.dart';
+import 'package:crocuta/services/storage_service.dart';
+import 'package:crocuta/services/youtube_service.dart';
 
 /// Conta le pagine artista chieste alla rete.
 class _Counting extends YouTubeService {

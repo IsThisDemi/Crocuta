@@ -2,13 +2,13 @@ import 'dart:ui' show Size;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/screens/spotify_import_screen.dart';
-import 'package:yeen_music/services/player_state.dart';
-import 'package:yeen_music/services/spotify_api.dart';
-import 'package:yeen_music/services/spotify_import.dart';
-import 'package:yeen_music/services/spotify_import_controller.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/screens/spotify_import_screen.dart';
+import 'package:crocuta/services/player_state.dart';
+import 'package:crocuta/services/spotify_api.dart';
+import 'package:crocuta/services/spotify_import.dart';
+import 'package:crocuta/services/spotify_import_controller.dart';
 
 import 'support/capture.dart';
 import 'support/fake_player.dart';

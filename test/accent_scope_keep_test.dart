@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yeen_music/design/accent.dart';
-import 'package:yeen_music/design/app_theme.dart';
+import 'package:crocuta/design/accent.dart';
+import 'package:crocuta/design/app_theme.dart';
 
 const _red = Color(0xFFE0604A);
 

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/services/smart_playlists.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/services/smart_playlists.dart';
 
 Track t(String id) => Track(id: id, title: id, author: 'x', thumbnailUrl: '');
 

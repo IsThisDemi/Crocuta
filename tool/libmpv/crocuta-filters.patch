@@ -192,7 +192,7 @@ index aa3831e..6f32d71 100644
      # filters
      '--enable-filter=overlay',
      '--enable-filter=equalizer',
-+    # Yeen Music: i filtri audio per AutoMix, preamp e analisi.
++    # Crocuta: i filtri audio per AutoMix, preamp e analisi.
 +    '--enable-filter=volume',
 +    '--enable-filter=highpass',
 +    '--enable-filter=lowpass',

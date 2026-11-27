@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/automix.dart';
-import 'package:yeen_music/services/vocal_pause.dart';
+import 'package:crocuta/services/automix.dart';
+import 'package:crocuta/services/vocal_pause.dart';
 
 /// Una voce che canta a -12 dB per [length] secondi, tranne nelle [gaps],
 /// dove resta il filo della base a -45 dB.

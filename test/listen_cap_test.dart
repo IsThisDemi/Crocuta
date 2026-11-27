@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/services/storage_service.dart';
-import 'package:yeen_music/services/sync_service.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/services/storage_service.dart';
+import 'package:crocuta/services/sync_service.dart';
 
 void main() {
   // Il caso vero: un ascolto da 39 ore di un brano da 3 minuti, contato

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/design/app_theme.dart';
-import 'package:yeen_music/design/chrome.dart';
-import 'package:yeen_music/widgets/large_title.dart';
+import 'package:crocuta/design/app_theme.dart';
+import 'package:crocuta/design/chrome.dart';
+import 'package:crocuta/widgets/large_title.dart';
 
 Future<void> pumpPage(WidgetTester tester) async {
   tester.view.physicalSize = const Size(430, 932);

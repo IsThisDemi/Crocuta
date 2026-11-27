@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "dev.riccardo.yeen_music"
+    namespace = "dev.riccardo.crocuta"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

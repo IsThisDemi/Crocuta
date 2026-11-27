@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/automix.dart';
-import 'package:yeen_music/services/mix_sync.dart';
+import 'package:crocuta/services/automix.dart';
+import 'package:crocuta/services/mix_sync.dart';
 
 BeatMixPlan _plan({
   double speed = 1,

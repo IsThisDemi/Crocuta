@@ -3,9 +3,9 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/automix.dart';
-import 'package:yeen_music/services/stem_mix.dart';
-import 'package:yeen_music/services/stem_separator.dart';
+import 'package:crocuta/services/automix.dart';
+import 'package:crocuta/services/stem_mix.dart';
+import 'package:crocuta/services/stem_separator.dart';
 
 /// Base costante 0.1, voce che sale col tempo (0.5 + secondi/100): cosi'
 /// dal valore si capisce anche *da dove* viene la voce.

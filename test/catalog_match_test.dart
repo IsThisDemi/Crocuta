@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/youtube_service.dart';
+import 'package:crocuta/services/youtube_service.dart';
 
 ({SongCandidate candidate, Duration? duration}) _c(
   String id,

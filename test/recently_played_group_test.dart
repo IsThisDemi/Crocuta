@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/screens/home_content.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/screens/home_content.dart';
 
 Track _t(String id, {String? album}) => Track(
   id: id,

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yeen_music/models/track.dart';
+import 'package:crocuta/models/track.dart';
 
 Track _t(String? plays) =>
     Track(id: 'x', title: 't', author: 'a', thumbnailUrl: '', plays: plays);

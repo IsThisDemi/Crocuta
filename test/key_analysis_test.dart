@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/key_analysis.dart';
+import 'package:crocuta/services/key_analysis.dart';
 
 const rate = 11025;
 

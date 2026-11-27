@@ -6,7 +6,7 @@ import FlutterMacOS
 /// di iOS, qui come NSView. Sceglie l'uscita audio dell'app — un
 /// altoparlante AirPlay, un'altra scheda audio — e libmpv la segue.
 final class RoutePickerViewFactory: NSObject, FlutterPlatformViewFactory {
-  static let viewType = "yeen/route_picker"
+  static let viewType = "crocuta/route_picker"
 
   func create(withViewIdentifier viewId: Int64, arguments args: Any?) -> NSView {
     let picker = AVRoutePickerView(frame: .zero)

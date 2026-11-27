@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/screens/settings_screen.dart';
-import 'package:yeen_music/services/player_state.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/screens/settings_screen.dart';
+import 'package:crocuta/services/player_state.dart';
 
 import 'support/capture.dart';
 import 'support/fake_player.dart';

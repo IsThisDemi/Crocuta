@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart' hide RepeatMode;
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/lyrics.dart';
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/screens/now_playing_screen.dart';
-import 'package:yeen_music/services/karaoke.dart';
-import 'package:yeen_music/services/player_state.dart';
+import 'package:crocuta/models/lyrics.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/screens/now_playing_screen.dart';
+import 'package:crocuta/services/karaoke.dart';
+import 'package:crocuta/services/player_state.dart';
 
 import 'support/capture.dart';
 import 'support/fake_player.dart';

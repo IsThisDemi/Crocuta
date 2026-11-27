@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/services/library_tidy.dart';
-import 'package:yeen_music/services/storage_service.dart';
-import 'package:yeen_music/services/youtube_service.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/services/library_tidy.dart';
+import 'package:crocuta/services/storage_service.dart';
+import 'package:crocuta/services/youtube_service.dart';
 
 const _video = Track(
   id: 'vid',

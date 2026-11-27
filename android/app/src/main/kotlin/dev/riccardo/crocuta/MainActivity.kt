@@ -1,4 +1,4 @@
-package dev.riccardo.yeen_music
+package dev.riccardo.crocuta
 
 import io.flutter.embedding.android.FlutterActivity
 

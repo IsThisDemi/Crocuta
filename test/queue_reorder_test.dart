@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/services/player_controller.dart';
+import 'package:crocuta/services/player_controller.dart';
 
 /// Applica lo spostamento a una coda finta, per verificare insieme dove
 /// finisce l'elemento e cosa resta a suonare.

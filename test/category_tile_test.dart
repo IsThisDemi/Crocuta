@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/explore.dart';
-import 'package:yeen_music/screens/browse_screens.dart';
+import 'package:crocuta/models/explore.dart';
+import 'package:crocuta/screens/browse_screens.dart';
 
 double contrastOnWhite(Color c) => 1.05 / (c.computeLuminance() + 0.05);
 

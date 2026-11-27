@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
-import 'package:yeen_music/services/youtube_service.dart';
+import 'package:crocuta/services/youtube_service.dart';
 
 /// Verifica che i "suggeriti" arrivino dalla coda correlata di YouTube Music
 /// e non dal ripiego che cerca per nome dell'artista.

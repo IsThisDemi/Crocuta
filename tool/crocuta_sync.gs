@@ -27,7 +27,9 @@
 // mano, scrivilo qui e usa lo stesso nel codice di configurazione.
 const SECRET = '';
 
-// Il file viene creato al primo salvataggio.
+// Il file viene creato al primo salvataggio. Il nome e' quello di quando
+// l'app si chiamava Yeen Music, e resta: cambiarlo vorrebbe dire non
+// trovare piu' i dati gia' sincronizzati sul Drive di chi la usa.
 const FILE_NAME = 'yeen-music-sync.json';
 
 function doGet(e) {

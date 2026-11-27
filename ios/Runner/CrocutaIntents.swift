@@ -12,8 +12,8 @@ import Foundation
 /// sarebbe vuota proprio nel caso che conta — "riproduci X" a telefono in
 /// tasca, con Crocuta chiusa da ieri.
 enum SiriCatalog {
-  private static let indexKey = "yeen.siri.index"
-  private static let commandKey = "yeen.siri.command"
+  private static let indexKey = "crocuta.siri.index"
+  private static let commandKey = "crocuta.siri.command"
 
   struct Song: Codable {
     let id: String
@@ -81,101 +81,101 @@ private func fuzzyMatch(_ haystack: String, _ needle: String) -> Bool {
 /// valore che l'app dichiara. Questa entita' *e'* l'elenco dei valori, ed
 /// e' il motivo per cui "riproduci X su Crocuta" funziona per la roba
 /// tua e non per il catalogo intero di YouTube Music.
-struct YeenSong: AppEntity {
+struct CrocutaSong: AppEntity {
   let id: String
   let title: String
   let artist: String
 
   static var typeDisplayRepresentation: TypeDisplayRepresentation { "Brano" }
-  static var defaultQuery = YeenSongQuery()
+  static var defaultQuery = CrocutaSongQuery()
 
   var displayRepresentation: DisplayRepresentation {
     DisplayRepresentation(title: "\(title)", subtitle: "\(artist)")
   }
 }
 
-struct YeenSongQuery: EntityStringQuery {
-  func entities(for identifiers: [String]) async throws -> [YeenSong] {
+struct CrocutaSongQuery: EntityStringQuery {
+  func entities(for identifiers: [String]) async throws -> [CrocutaSong] {
     SiriCatalog.load().songs
       .filter { identifiers.contains($0.id) }
-      .map { YeenSong(id: $0.id, title: $0.title, artist: $0.artist) }
+      .map { CrocutaSong(id: $0.id, title: $0.title, artist: $0.artist) }
   }
 
-  func entities(matching string: String) async throws -> [YeenSong] {
+  func entities(matching string: String) async throws -> [CrocutaSong] {
     SiriCatalog.load().songs
       .filter { fuzzyMatch($0.title, string) || fuzzyMatch($0.artist, string) }
-      .map { YeenSong(id: $0.id, title: $0.title, artist: $0.artist) }
+      .map { CrocutaSong(id: $0.id, title: $0.title, artist: $0.artist) }
   }
 
   /// Quelli che Siri propone e indicizza per primi. L'ordine arriva gia'
   /// giusto da Dart — preferiti, poi playlist, poi recenti — quindi qui si
   /// taglia e basta.
-  func suggestedEntities() async throws -> [YeenSong] {
+  func suggestedEntities() async throws -> [CrocutaSong] {
     SiriCatalog.load().songs
       .prefix(50)
-      .map { YeenSong(id: $0.id, title: $0.title, artist: $0.artist) }
+      .map { CrocutaSong(id: $0.id, title: $0.title, artist: $0.artist) }
   }
 }
 
 /// Un artista che segui.
-struct YeenArtist: AppEntity {
+struct CrocutaArtist: AppEntity {
   let id: String
   let name: String
 
   static var typeDisplayRepresentation: TypeDisplayRepresentation { "Artista" }
-  static var defaultQuery = YeenArtistQuery()
+  static var defaultQuery = CrocutaArtistQuery()
 
   var displayRepresentation: DisplayRepresentation {
     DisplayRepresentation(title: "\(name)")
   }
 }
 
-struct YeenArtistQuery: EntityStringQuery {
-  func entities(for identifiers: [String]) async throws -> [YeenArtist] {
+struct CrocutaArtistQuery: EntityStringQuery {
+  func entities(for identifiers: [String]) async throws -> [CrocutaArtist] {
     SiriCatalog.load().artists
       .filter { identifiers.contains($0.id) }
-      .map { YeenArtist(id: $0.id, name: $0.name) }
+      .map { CrocutaArtist(id: $0.id, name: $0.name) }
   }
 
-  func entities(matching string: String) async throws -> [YeenArtist] {
+  func entities(matching string: String) async throws -> [CrocutaArtist] {
     SiriCatalog.load().artists
       .filter { fuzzyMatch($0.name, string) }
-      .map { YeenArtist(id: $0.id, name: $0.name) }
+      .map { CrocutaArtist(id: $0.id, name: $0.name) }
   }
 
-  func suggestedEntities() async throws -> [YeenArtist] {
-    SiriCatalog.load().artists.map { YeenArtist(id: $0.id, name: $0.name) }
+  func suggestedEntities() async throws -> [CrocutaArtist] {
+    SiriCatalog.load().artists.map { CrocutaArtist(id: $0.id, name: $0.name) }
   }
 }
 
 /// Una delle tue playlist.
-struct YeenPlaylist: AppEntity {
+struct CrocutaPlaylist: AppEntity {
   let id: String
   let name: String
 
   static var typeDisplayRepresentation: TypeDisplayRepresentation { "Playlist" }
-  static var defaultQuery = YeenPlaylistQuery()
+  static var defaultQuery = CrocutaPlaylistQuery()
 
   var displayRepresentation: DisplayRepresentation {
     DisplayRepresentation(title: "\(name)")
   }
 }
 
-struct YeenPlaylistQuery: EntityStringQuery {
-  func entities(for identifiers: [String]) async throws -> [YeenPlaylist] {
+struct CrocutaPlaylistQuery: EntityStringQuery {
+  func entities(for identifiers: [String]) async throws -> [CrocutaPlaylist] {
     SiriCatalog.load().playlists
       .filter { identifiers.contains($0.id) }
-      .map { YeenPlaylist(id: $0.id, name: $0.name) }
+      .map { CrocutaPlaylist(id: $0.id, name: $0.name) }
   }
 
-  func entities(matching string: String) async throws -> [YeenPlaylist] {
+  func entities(matching string: String) async throws -> [CrocutaPlaylist] {
     SiriCatalog.load().playlists
       .filter { fuzzyMatch($0.name, string) }
-      .map { YeenPlaylist(id: $0.id, name: $0.name) }
+      .map { CrocutaPlaylist(id: $0.id, name: $0.name) }
   }
 
-  func suggestedEntities() async throws -> [YeenPlaylist] {
-    SiriCatalog.load().playlists.map { YeenPlaylist(id: $0.id, name: $0.name) }
+  func suggestedEntities() async throws -> [CrocutaPlaylist] {
+    SiriCatalog.load().playlists.map { CrocutaPlaylist(id: $0.id, name: $0.name) }
   }
 }
 
@@ -202,7 +202,7 @@ struct PlaySongIntent: AudioPlaybackIntent {
   static var description = IntentDescription("Riproduce un brano della tua libreria.")
 
   @Parameter(title: "Brano")
-  var song: YeenSong
+  var song: CrocutaSong
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
     dispatch("song", song.id)
@@ -217,7 +217,7 @@ struct PlayArtistIntent: AudioPlaybackIntent {
   )
 
   @Parameter(title: "Artista")
-  var artist: YeenArtist
+  var artist: CrocutaArtist
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
     dispatch("artist", artist.id)
@@ -230,7 +230,7 @@ struct PlayPlaylistIntent: AudioPlaybackIntent {
   static var description = IntentDescription("Riproduce una delle tue playlist.")
 
   @Parameter(title: "Playlist")
-  var playlist: YeenPlaylist
+  var playlist: CrocutaPlaylist
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
     dispatch("playlist", playlist.id)
@@ -276,7 +276,7 @@ struct StartRadioIntent: AudioPlaybackIntent {
   )
 
   @Parameter(title: "Brano")
-  var song: YeenSong
+  var song: CrocutaSong
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
     dispatch("radio", song.id)
@@ -331,7 +331,7 @@ struct ResumeIntent: AudioPlaybackIntent {
 
 /// Ogni frase deve contenere il nome dell'app: e' una regola di Apple, non
 /// una scelta di stile. Il massimo e' dieci scorciatoie; qui sono otto.
-struct YeenShortcuts: AppShortcutsProvider {
+struct CrocutaShortcuts: AppShortcutsProvider {
   static var appShortcuts: [AppShortcut] {
     AppShortcut(
       intent: PlaySongIntent(),
@@ -426,7 +426,7 @@ final class SiriBridge {
   private var channel: FlutterMethodChannel?
 
   static func register(messenger: FlutterBinaryMessenger) {
-    let channel = FlutterMethodChannel(name: "yeen/siri", binaryMessenger: messenger)
+    let channel = FlutterMethodChannel(name: "crocuta/siri", binaryMessenger: messenger)
     shared.channel = channel
 
     channel.setMethodCallHandler { call, result in
@@ -447,7 +447,7 @@ final class SiriBridge {
           // Senza, Siri non sa quali brani, artisti e playlist esistono, e
           // le frasi con un nome dentro — "Riproduci Hope su Crocuta" —
           // non scattano mai: le genera per i valori che l'app dichiara.
-          YeenShortcuts.updateAppShortcutParameters()
+          CrocutaShortcuts.updateAppShortcutParameters()
         }
         result(nil)
       case "takeCommand":

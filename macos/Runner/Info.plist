@@ -35,5 +35,7 @@
 	<string>To hear what you want to play when you ask Crocuta with your voice.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>To understand what you want to play when you ask Crocuta with your voice.</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>To bring the songs and playlists of your music library into Crocuta, when you import from Apple Music.</string>
 </dict>
 </plist>

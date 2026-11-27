@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/services/player_controller.dart';
-import 'package:yeen_music/services/player_state.dart';
-import 'package:yeen_music/services/sleep_timer.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/services/player_controller.dart';
+import 'package:crocuta/services/player_state.dart';
+import 'package:crocuta/services/sleep_timer.dart';
 
 class RecordingPlayer extends PlayerController {
   int fades = 0;

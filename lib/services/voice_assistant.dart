@@ -66,7 +66,7 @@ class VoiceAssistant extends Notifier<VoiceState> {
   Timer? _silence;
   Timer? _limit;
 
-  static const _audio = MethodChannel('demus/now_playing');
+  static const _audio = MethodChannel('crocuta/now_playing');
 
   @override
   VoiceState build() {

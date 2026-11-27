@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/services/radio_seeds.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/services/radio_seeds.dart';
 
 Track t(String id) => Track(id: id, title: id, author: 'x', thumbnailUrl: '');
 

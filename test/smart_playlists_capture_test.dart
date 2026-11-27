@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/services/library_views.dart';
-import 'package:yeen_music/services/smart_playlists.dart';
-import 'package:yeen_music/widgets/smart_playlist_views.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/services/library_views.dart';
+import 'package:crocuta/services/smart_playlists.dart';
+import 'package:crocuta/widgets/smart_playlist_views.dart';
 
 import 'support/capture.dart';
 

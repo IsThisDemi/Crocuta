@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yeen_music/models/artist.dart';
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/providers.dart';
-import 'package:yeen_music/services/follows_controller.dart';
-import 'package:yeen_music/services/library_sort.dart';
+import 'package:crocuta/models/artist.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/providers.dart';
+import 'package:crocuta/services/follows_controller.dart';
+import 'package:crocuta/services/library_sort.dart';
 
 Track _s(
   String id,

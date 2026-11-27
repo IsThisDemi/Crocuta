@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
-import 'package:yeen_music/models/track.dart';
-import 'package:yeen_music/services/storage_service.dart';
+import 'package:crocuta/models/track.dart';
+import 'package:crocuta/services/storage_service.dart';
 
 const _queue = [
   Track(id: 'a', title: 'Primo', author: 'Tizio', thumbnailUrl: ''),
@@ -16,7 +16,7 @@ void main() {
   late StorageService storage;
 
   setUp(() async {
-    dir = await Directory.systemTemp.createTemp('demus_test');
+    dir = await Directory.systemTemp.createTemp('crocuta_test');
     storage = StorageService();
     await storage.init(path: dir.path);
   });

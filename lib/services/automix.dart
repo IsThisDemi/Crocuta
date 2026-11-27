@@ -179,9 +179,11 @@ MixStage rollingStage(double t, {required bool incoming}) {
 }
 
 /// Il rolling con le curve dai DJ: i tempi mediani che DJtransGAN genera su
-/// 516 transizioni (vedi la voce 6 di docs/AUTOMIX-ROADMAP.md), senza la
-/// rete. Le dissolvenze del modello, lineari in ampiezza, qui sono le
-/// solite rampe di [_smooth], con lo stesso inizio e la stessa fine.
+/// 516 transizioni (Chen et al., "Automatic DJ Transitions with
+/// Differentiable Audio Effects and Generative Adversarial Networks",
+/// ICASSP 2022), senza la rete. Le dissolvenze del modello, lineari in
+/// ampiezza, qui sono le solite rampe di [_smooth], con lo stesso inizio e
+/// la stessa fine.
 ///
 /// Il modello non ha un volume a parte: le bande sono il volume. Qui il
 /// volume del player segue la banda piu' alta, e le altre stanno sotto di
@@ -404,7 +406,7 @@ String _mix(double m) => m.toStringAsFixed(3);
 /// `af-command` senza ricostruire la catena, che ricostruita fa uno scatto.
 /// Le etichette `@lo` `@mid` `@hi` `@hp` `@lp` sono quelle a cui i comandi
 /// si rivolgono. Solo filtri che il libmpv ricompilato ha davvero (vedi
-/// tool/libmpv/yeen-filters.patch): con uno mancante la catena viene
+/// tool/libmpv/crocuta-filters.patch): con uno mancante la catena viene
 /// rifiutata e il brano non suona.
 List<String> mixFilterChain(MixStage s) {
   final hp = highpassSetting(s.highpass);
@@ -972,7 +974,7 @@ double? beatMatchSpeed(double outBpm, double inBpm) {
 // ricampionamento "a nastro", che sposta insieme tono e tempo:
 // - `rubberband` e' GPL, e comunque non c'e';
 // - `asetrate` di ffmpeg (il modo solito) non e' fra i filtri compilati
-//   (vedi tool/libmpv/yeen-filters.patch: ci sono `aresample` e `atempo`);
+//   (vedi tool/libmpv/crocuta-filters.patch: ci sono `aresample` e `atempo`);
 // - `atempo` dopo un ricampionamento darebbe il tempo giusto, ma i suoi
 //   timestamp contano i secondi in uscita e non quelli del brano: la
 //   posizione che mpv riporta scivolerebbe di un secondo al minuto, e il
