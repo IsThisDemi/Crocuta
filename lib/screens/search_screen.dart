@@ -17,6 +17,7 @@ import '../widgets/media_card.dart';
 import '../widgets/section_header.dart';
 import '../widgets/track_context_menu.dart';
 import '../widgets/track_tile.dart';
+import '../widgets/video_card.dart';
 import 'album_screen.dart';
 import 'browse_screens.dart';
 import 'artist_screen.dart';
@@ -267,7 +268,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     if (search.tracks.isEmpty &&
         search.artists.isEmpty &&
         search.albums.isEmpty &&
-        search.playlists.isEmpty) {
+        search.playlists.isEmpty &&
+        search.videos.isEmpty) {
       return centered(const Text('No results.'));
     }
 
@@ -284,7 +286,22 @@ class _ResultsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // I video: una categoria a parte, prima dei brani quando il risultato
+    // principale e' un video (un remix uscito solo su YouTube), dopo
+    // altrimenti. Toccandone uno lo si ascolta, con gli altri video in coda.
+    final videos = search.videos.isEmpty
+        ? const <Widget>[]
+        : <Widget>[
+            const SectionHeader(title: 'Videos'),
+            VideoRail(
+              videos: search.videos,
+              onPlay: (v) => ref
+                  .read(playerProvider.notifier)
+                  .playTrack(v, queue: search.videos),
+            ),
+          ];
     final children = <Widget>[
+      if (search.topIsVideo) ...videos,
       if (search.artists.isNotEmpty) ...[
         const SectionHeader(title: 'Artists'),
         MediaCardRail(
@@ -310,6 +327,7 @@ class _ResultsView extends ConsumerWidget {
         const SectionHeader(title: 'Songs'),
         for (final track in search.tracks) _SongRow(track: track),
       ],
+      if (!search.topIsVideo) ...videos,
       if (search.albums.isNotEmpty) ...[
         const SectionHeader(title: 'Albums'),
         MediaCardRail(

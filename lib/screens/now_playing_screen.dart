@@ -22,6 +22,7 @@ import '../widgets/glass_surfaces.dart';
 import '../widgets/progress_fill.dart';
 import '../widgets/content_width.dart';
 import '../widgets/drawer_dismiss.dart';
+import '../widgets/spot_slider.dart';
 import '../widgets/accent_glow.dart';
 import '../widgets/seek_bar.dart';
 import '../widgets/spot_controls.dart';
@@ -34,6 +35,7 @@ import 'lyrics_screen.dart';
 import '../models/track.dart';
 import 'video_screen.dart';
 import '../widgets/motion_cover.dart';
+import '../widgets/player_keys.dart';
 import '../widgets/connect_views.dart';
 
 /// Cosa occupa la parte alta del player.
@@ -257,7 +259,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _Glyph(
+                PlayerGlyph(
                   icon: Icons.skip_previous_rounded,
                   tooltip: 'Previous',
                   onTap: notifier.previous,
@@ -270,7 +272,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                   size: 74,
                 ),
                 const SizedBox(width: 20),
-                _Glyph(
+                PlayerGlyph(
                   icon: Icons.skip_next_rounded,
                   tooltip: 'Next',
                   onTap: notifier.next,
@@ -861,21 +863,14 @@ class _SingBar extends ConsumerWidget {
           children: [
             Icon(Icons.mic_off_rounded, size: 16, color: accent),
             Expanded(
-              child: SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  trackHeight: 3,
-                  activeTrackColor: accent,
-                  inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
-                  thumbColor: Colors.white,
-                  overlayShape: const RoundSliderOverlayShape(
-                    overlayRadius: 14,
-                  ),
-                  thumbShape: const RoundSliderThumbShape(
-                    enabledThumbRadius: 6,
-                  ),
-                ),
-                child: Slider(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: SpotSlider(
+                  seed: 'voice',
+                  height: 36,
                   value: k.voice,
+                  label: (v) => '${(v * 100).round()}%',
+                  semanticLabel: 'Voice',
                   onChanged: ref.read(playerProvider.notifier).setKaraokeVoice,
                 ),
               ),
@@ -953,139 +948,37 @@ class _PaneBar extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _PaneKey(
+            PlayerKey(
               icon: Icons.lyrics_rounded,
               label: 'Lyrics',
               active: pane == _Pane.lyrics,
               onTap: onLyrics,
             ),
-            _PaneKey(icon: Icons.tune_rounded, label: 'Equalizer', onTap: onEq),
-            _PaneKey(
+            PlayerKey(
+              icon: Icons.tune_rounded,
+              label: 'Equalizer',
+              onTap: onEq,
+            ),
+            PlayerKey(
               icon: Icons.smart_display_rounded,
               label: 'Watch video',
               onTap: onVideo,
             ),
-            if (AirPlayButton.isSupported) const _PaneKey.airplay(),
+            if (AirPlayButton.isSupported) const PlayerKey.airplay(),
             if (MiniPlayerWindow.isSupported)
-              const _PaneKey(
+              const PlayerKey(
                 icon: Icons.picture_in_picture_alt_rounded,
                 label: 'Mini',
                 tooltip: 'Mini Player (⌥⌘M)',
                 onTap: MiniPlayerWindow.toggle,
               ),
-            _PaneKey(
+            PlayerKey(
               icon: Icons.queue_music_rounded,
               label: 'Queue',
               active: pane == _Pane.queue,
               onTap: onQueue,
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Un comando della fila in fondo al player: una macchiolina viva.
-class _PaneKey extends StatefulWidget {
-  final IconData? icon;
-  final String label;
-  final String? tooltip;
-  final bool active;
-  final VoidCallback? onTap;
-  final bool airplay;
-
-  const _PaneKey({
-    required IconData this.icon,
-    required this.label,
-    required VoidCallback this.onTap,
-    this.active = false,
-    this.tooltip,
-  }) : airplay = false;
-
-  /// L'uscita audio: il pulsante e' quello di sistema, che apre il suo
-  /// selettore; qui gli si da' la stessa macchia e lo stesso nome.
-  const _PaneKey.airplay()
-    : icon = null,
-      label = 'AirPlay',
-      tooltip = null,
-      active = false,
-      onTap = null,
-      airplay = true;
-
-  @override
-  State<_PaneKey> createState() => _PaneKeyState();
-}
-
-class _PaneKeyState extends State<_PaneKey> {
-  bool _hover = false;
-  bool _down = false;
-
-  static const double _size = 42;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final w = widget;
-    final lit = w.active;
-    final iconColor = lit ? AppColors.ink900 : colors.accent;
-    final fill = lit
-        ? colors.accent
-        : Colors.white.withValues(alpha: _hover ? 0.12 : 0.07);
-
-    final spot = SpotMotionBuilder(
-      builder: (context, t) => AnimatedContainer(
-        duration: AppMotion.fast,
-        width: _size,
-        height: _size,
-        decoration: ShapeDecoration(
-          color: fill,
-          shape: SpotBorder(
-            seed: 'pane-${w.label}',
-            wobble: 0.8,
-            time: t,
-            music: SpotMotion.musicOf(context),
-          ),
-        ),
-        alignment: Alignment.center,
-        child: w.airplay
-            ? AirPlayButton(size: _size, bare: true, tint: colors.accent)
-            : Icon(w.icon, size: 22, color: iconColor),
-      ),
-    );
-
-    // Solo la macchia: il nome sta nel suggerimento col mouse sopra.
-    final body = AnimatedScale(
-      scale: _down ? 0.9 : (_hover ? 1.06 : 1),
-      duration: AppMotion.fast,
-      child: spot,
-    );
-
-    return Tooltip(
-      message: w.tooltip ?? w.label,
-      child: Semantics(
-        button: true,
-        selected: lit,
-        label: w.label,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          onEnter: (_) => setState(() => _hover = true),
-          onExit: (_) => setState(() => _hover = false),
-          child: SizedBox(
-            width: 52,
-            // AirPlay: il tocco lo prende la vista di sistema dentro la
-            // macchia, non un GestureDetector sopra.
-            child: w.airplay
-                ? body
-                : GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTapDown: (_) => setState(() => _down = true),
-                    onTapCancel: () => setState(() => _down = false),
-                    onTapUp: (_) => setState(() => _down = false),
-                    onTap: w.onTap,
-                    child: body,
-                  ),
-          ),
         ),
       ),
     );
@@ -1179,66 +1072,6 @@ class _ToggleState extends State<_Toggle> {
                     ),
                   ),
                 ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Precedente e successivo: un glifo grande e nudo, come in Apple Music.
-/// Premuto si stringe un poco; col mouse sopra gli compare dietro lo stesso
-/// alone degli interruttori.
-class _Glyph extends StatefulWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  const _Glyph({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  @override
-  State<_Glyph> createState() => _GlyphState();
-}
-
-class _GlyphState extends State<_Glyph> {
-  bool _hover = false;
-  bool _down = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: widget.tooltip,
-      child: Semantics(
-        button: true,
-        label: widget.tooltip,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          onEnter: (_) => setState(() => _hover = true),
-          onExit: (_) => setState(() => _hover = false),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: (_) => setState(() => _down = true),
-            onTapCancel: () => setState(() => _down = false),
-            onTapUp: (_) => setState(() => _down = false),
-            onTap: widget.onTap,
-            child: AnimatedScale(
-              scale: _down ? 0.86 : 1,
-              duration: AppMotion.fast,
-              child: AnimatedContainer(
-                duration: AppMotion.fast,
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: _hover ? 0.08 : 0),
-                ),
-                child: Icon(widget.icon, size: 44, color: Colors.white),
               ),
             ),
           ),
@@ -1454,10 +1287,9 @@ class _MoreButtonState extends ConsumerState<_MoreButton> {
   }
 }
 
-/// Il volume, sotto il play: la stessa barra sottile e arrotondata
-/// dell'avanzamento, senza pallino finche' non la si tocca. Col mouse
-/// sopra o trascinandola si ingrossa, come in Apple Music: a riposo e'
-/// una linea che non ruba la scena ai comandi.
+/// Il volume, sotto il play: la stessa barra dell'avanzamento, senza la
+/// testa finche' non la si tocca e spenta a riposo, perche' non rubi la
+/// scena ai comandi. Col mouse sopra si ingrossa e si accende.
 ///
 /// Osserva solo il volume: il player sopra non si ricostruisce a ogni
 /// passo del trascinamento.
@@ -1470,79 +1302,52 @@ class _VolumeBar extends ConsumerStatefulWidget {
 
 class _VolumeBarState extends ConsumerState<_VolumeBar> {
   double? _dragging;
-  bool _hover = false;
 
   @override
   Widget build(BuildContext context) {
     final volume = ref.watch(playerProvider.select((s) => s.volume));
     final value = (_dragging ?? volume).clamp(0.0, 100.0);
-    final accent = context.colors.accent;
     final quiet = Colors.white.withValues(alpha: 0.6);
     final notifier = ref.read(playerProvider.notifier);
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-        child: Row(
-          children: [
-            Icon(
-              value == 0
-                  ? Icons.volume_mute_rounded
-                  : Icons.volume_down_rounded,
-              size: 18,
-              color: quiet,
-            ),
-            Expanded(
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(end: _dragging != null || _hover ? 1 : 0),
-                duration: AppMotion.fast,
-                curve: Curves.easeOut,
-                builder: (context, grow, _) => SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 4 + 3 * grow,
-                    // Bianco a riposo, nel colore del brano solo mentre la
-                    // si tocca: a volume pieno era una seconda barra
-                    // colorata lunga quanto l'avanzamento, e le due si
-                    // contendevano lo sguardo. Quella che conta e' il brano.
-                    activeTrackColor: Color.lerp(
-                      context.colors.accentMuted,
-                      accent,
-                      grow,
-                    ),
-                    inactiveTrackColor: Colors.white.withValues(alpha: 0.14),
-                    thumbColor: context.colors.accent,
-                    overlayColor: accent.withValues(alpha: 0.18),
-                    thumbShape: RoundSliderThumbShape(
-                      enabledThumbRadius: 7 * grow,
-                      elevation: grow,
-                    ),
-                    overlayShape: const RoundSliderOverlayShape(
-                      overlayRadius: 14,
-                    ),
-                    trackShape: const RoundedRectSliderTrackShape(),
-                  ),
-                  child: Slider(
-                    value: value,
-                    max: 100,
-                    semanticFormatterCallback: (v) => 'Volume ${v.round()}%',
-                    // Il volume cambia mentre si trascina, a differenza
-                    // dell'avanzamento: si regola a orecchio.
-                    onChanged: (v) {
-                      setState(() => _dragging = v);
-                      notifier.setVolume(v);
-                    },
-                    onChangeEnd: (v) {
-                      notifier.setVolume(v);
-                      setState(() => _dragging = null);
-                    },
-                  ),
-                ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Row(
+        children: [
+          Icon(
+            value == 0 ? Icons.volume_mute_rounded : Icons.volume_down_rounded,
+            size: 18,
+            color: quiet,
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: SpotSlider(
+                seed: 'volume',
+                value: value,
+                max: 100,
+                headAtRest: false,
+                // Spento a riposo, nel colore del brano solo mentre lo
+                // si tocca: a volume pieno era una seconda barra colorata
+                // lunga quanto l'avanzamento, e le due si contendevano lo
+                // sguardo. Quella che conta e' il brano.
+                idleColor: context.colors.accentMuted,
+                label: (v) => '${v.round()}%',
+                semanticLabel: 'Volume',
+                // Il volume cambia mentre si trascina, a differenza
+                // dell'avanzamento: si regola a orecchio.
+                onChanged: (v) {
+                  setState(() => _dragging = v);
+                  notifier.setVolume(v);
+                },
+                onChangeEnd: (v) {
+                  notifier.setVolume(v);
+                  setState(() => _dragging = null);
+                },
               ),
             ),
-            Icon(Icons.volume_up_rounded, size: 18, color: quiet),
-          ],
-        ),
+          ),
+          Icon(Icons.volume_up_rounded, size: 18, color: quiet),
+        ],
       ),
     );
   }

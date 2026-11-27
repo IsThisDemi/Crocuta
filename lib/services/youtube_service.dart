@@ -56,15 +56,29 @@ class SearchSections {
   final List<AlbumCard> albums;
   final List<AlbumCard> playlists;
 
+  /// I video: remix e pezzi usciti solo su YouTube, che fra le canzoni non
+  /// ci sono (vedi [Track.isVideo]).
+  final List<Track> videos;
+
+  /// Il risultato principale della ricerca e' un video: la pagina li mette
+  /// prima delle canzoni, perche' e' li' che sta quello che cercavi.
+  final bool topIsVideo;
+
   const SearchSections({
     this.songs = const [],
     this.artists = const [],
     this.albums = const [],
     this.playlists = const [],
+    this.videos = const [],
+    this.topIsVideo = false,
   });
 
   bool get isEmpty =>
-      songs.isEmpty && artists.isEmpty && albums.isEmpty && playlists.isEmpty;
+      songs.isEmpty &&
+      artists.isEmpty &&
+      albums.isEmpty &&
+      playlists.isEmpty &&
+      videos.isEmpty;
 }
 
 class YouTubeService {
@@ -159,6 +173,8 @@ class YouTubeService {
   /// per la sessione: la copertina animata lo chiede a ogni apertura.
   Future<String?> musicVideoFor(Track track) async {
     if (_musicVideos.containsKey(track.id)) return _musicVideos[track.id];
+    // Un video trovato fra i video e' lui stesso il suo video.
+    if (track.isVideo) return _musicVideos[track.id] = track.id;
     try {
       final audio = await audioIdFor(track.id);
       if (audio != track.id) return _musicVideos[track.id] = track.id;
@@ -260,6 +276,12 @@ class YouTubeService {
   /// Searches YouTube Music and splits the results into the sections used by
   /// major music apps: artists, songs, albums and playlists.
   Future<SearchSections> search(String query) async {
+    // I video a parte, col filtro "Videos", insieme alla ricerca di tutto:
+    // quella ne porta uno o due fra le canzoni, il filtro una ventina.
+    final moreVideos = searchVideos(query).catchError((Object e) {
+      developer.log('Video della ricerca non letti: $e');
+      return <Track>[];
+    });
     final data = await _post(_musicSearchUrl, {
       'context': _context,
       'query': query,
@@ -276,6 +298,8 @@ class YouTubeService {
     final artists = <AlbumCard>[];
     final albums = <AlbumCard>[];
     final playlists = <AlbumCard>[];
+    final videos = <Track>[];
+    var topIsVideo = false;
     final seen = <String>{};
 
     void addCard(List<AlbumCard> list, AlbumCard card) {
@@ -289,6 +313,20 @@ class YouTubeService {
       // shelf carries the name, browseId and thumbnail; items are top songs).
       final card = s['musicCardShelfRenderer'];
       if (card != null) {
+        // Il risultato principale puo' essere anche un brano o un video da
+        // suonare: allora ha un watchEndpoint e non un browseEndpoint, e
+        // prima si buttava via — per "ninja gaiden deko" era proprio il
+        // video che si cercava.
+        final watched = _cardTrack(card as Map);
+        if (watched != null) {
+          if (watched.isVideo) {
+            videos.add(watched);
+            topIsVideo = true;
+          } else {
+            songs.add(watched);
+          }
+          continue;
+        }
         final browseId =
             card['onTap']?['browseEndpoint']?['browseId'] as String?;
         final cardTitle = _text(card['title']);
@@ -402,6 +440,9 @@ class YouTubeService {
               isExplicit: _isExplicit(r),
             ),
           );
+        } else if (typeLower.startsWith('video') && videoId != null) {
+          final v = _videoRow(r, videoId);
+          if (v != null) videos.add(v);
         } else if ((typeLower.contains('artist') ||
                 typeLower.contains('artista')) &&
             browseId != null) {
@@ -438,11 +479,193 @@ class YouTubeService {
       }
     }
 
+    // Prima quelli della ricerca di tutto, nel suo ordine, poi gli altri
+    // del filtro; uno solo per id.
+    // Quelli gia' presenti prendono dal filtro la durata, che la ricerca
+    // di tutto non scrive.
+    final at = {for (final (i, v) in videos.indexed) v.id: i};
+    for (final v in await moreVideos) {
+      final i = at[v.id];
+      if (i != null) {
+        if (videos[i].duration == null && v.duration != null) {
+          videos[i] = videos[i].copyWith(duration: v.duration);
+        }
+        continue;
+      }
+      if (videos.length >= _maxSearchVideos) continue;
+      at[v.id] = videos.length;
+      videos.add(v);
+    }
+
+    // Non vestiti da canzone come gli altri (vedi [_seen]): qui si cercava
+    // proprio il video, e nella fila dei video deve restare lui.
+    if (videos.isNotEmpty) {
+      unawaited(_onTracksSeen?.call(videos) ?? Future.value());
+    }
     return SearchSections(
       songs: songs,
       artists: artists,
       albums: albums,
       playlists: playlists,
+      videos: videos,
+      topIsVideo: topIsVideo,
+    );
+  }
+
+  /// Quanti video mostra la ricerca: una fila che scorre, non una pagina.
+  static const _maxSearchVideos = 12;
+
+  /// I video per [query], dal filtro "Videos" di YouTube Music.
+  Future<List<Track>> searchVideos(String query) async {
+    final data = await _post(_musicSearchUrl, {
+      'context': _context,
+      'query': query,
+      'params': _videosFilter,
+    });
+    final tabs =
+        data['contents']?['tabbedSearchResultsRenderer']?['tabs'] as List?;
+    final sections =
+        (tabs == null || tabs.isEmpty
+                ? null
+                : (tabs[0]
+                      as Map)['tabRenderer']?['content']?['sectionListRenderer']?['contents'])
+            as List? ??
+        const [];
+    final out = <Track>[];
+    for (final section in sections) {
+      final items =
+          (section as Map)['musicShelfRenderer']?['contents'] as List? ??
+          const [];
+      for (final item in items) {
+        final r = (item as Map)['musicResponsiveListItemRenderer'];
+        final id = r?['playlistItemData']?['videoId'] as String?;
+        if (r == null || id == null) continue;
+        final v = _videoRow(r as Map, id);
+        if (v != null) out.add(v);
+      }
+    }
+    return out;
+  }
+
+  /// Una riga video: il titolo nella prima colonna, nella seconda il
+  /// canale (o l'artista, per i videoclip ufficiali), le visualizzazioni e
+  /// la durata — "Video • De'Ko • 153K views" nella ricerca di tutto,
+  /// "De'Ko • 153K views • 2:08" col filtro.
+  Track? _videoRow(Map r, String videoId) {
+    final title = _flexText(r, 0);
+    if (title == null || title.trim().isEmpty) return null;
+    final flex = r['flexColumns'] as List? ?? const [];
+    final runs = [
+      for (var c = 1; c < flex.length; c++)
+        ..._runs(
+          (flex[c]
+              as Map)['musicResponsiveListItemFlexColumnRenderer']?['text'],
+        ),
+    ];
+    return _videoTrack(
+      videoId,
+      title: title,
+      runs: runs,
+      thumbnail: _itemThumb(r),
+      explicit: _isExplicit(r),
+      official: _musicVideoType(r) == _omv,
+    );
+  }
+
+  /// Il brano o il video del riquadro del risultato principale, se e' uno
+  /// da suonare e non un artista o un album da aprire.
+  Track? _cardTrack(Map card) {
+    final watch = card['onTap']?['watchEndpoint'] as Map?;
+    final videoId = watch?['videoId'] as String?;
+    final title = _text(card['title']);
+    if (videoId == null || title == null || title.trim().isEmpty) return null;
+    final type =
+        watch?['watchEndpointMusicSupportedConfigs']?['watchEndpointMusicConfig']?['musicVideoType']
+            as String?;
+    final runs = (card['subtitle']?['runs'] as List?) ?? const [];
+    final thumb = _thumbUrl(card['thumbnail']);
+    if (type == _atv) {
+      _audioIds.putIfAbsent(videoId, () => videoId);
+      final v = _videoTrack(
+        videoId,
+        title: title,
+        runs: runs,
+        thumbnail: thumb,
+        official: true,
+      );
+      return v == null
+          ? null
+          : Track(
+              id: v.id,
+              title: v.title,
+              author: v.author,
+              duration: v.duration,
+              thumbnailUrl: v.thumbnailUrl,
+              artistId: v.artistId,
+            );
+    }
+    return _videoTrack(
+      videoId,
+      title: title,
+      runs: runs,
+      thumbnail: thumb,
+      official: type == _omv,
+    );
+  }
+
+  /// Un [Track] video dai pezzi di testo sotto il titolo: la parola "Video"
+  /// e i punti si saltano, il primo nome (con la sua pagina, se ce l'ha) e'
+  /// chi l'ha pubblicato, poi visualizzazioni e durata.
+  Track? _videoTrack(
+    String videoId, {
+    required String title,
+    required List<dynamic> runs,
+    String? thumbnail,
+    bool explicit = false,
+
+    /// Un videoclip ufficiale: chi l'ha pubblicato e' l'artista, e la sua
+    /// pagina si apre. Il canale di chi ha caricato un video qualunque non
+    /// e' una pagina d'artista.
+    bool official = false,
+  }) {
+    String? author, artistId, views;
+    Duration? duration;
+    for (final run in runs) {
+      final m = run as Map;
+      final text = (m['text'] as String? ?? '').trim();
+      if (text.isEmpty || text == '•') continue;
+      final low = text.toLowerCase();
+      if (author == null &&
+          (low == 'video' || low == 'song' || low == 'brano')) {
+        continue;
+      }
+      if (RegExp(r'^\d+(:\d{2}){1,2}$').hasMatch(text)) {
+        duration = _parseDuration(text);
+      } else if (RegExp(
+        r'(views|visualizzazioni|plays|riproduzioni)$',
+      ).hasMatch(low)) {
+        views = text;
+      } else if (author == null) {
+        author = text;
+        if (official) {
+          artistId =
+              m['navigationEndpoint']?['browseEndpoint']?['browseId']
+                  as String?;
+        }
+      }
+    }
+    if (duration != null) _durationCache.putIfAbsent(videoId, () => duration!);
+    return Track(
+      id: videoId,
+      title: _cleanTitle(title),
+      author: author ?? 'Unknown',
+      duration: duration ?? _durationFromCache(videoId),
+      thumbnailUrl:
+          thumbnail ?? 'https://i.ytimg.com/vi/$videoId/hqdefault.jpg',
+      artistId: artistId,
+      plays: views,
+      isExplicit: explicit,
+      isVideo: true,
     );
   }
 

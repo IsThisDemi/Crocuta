@@ -135,6 +135,12 @@ class MotionCoverController extends Notifier<bool> {
 /// visualizzatore (vedi SpotMotionHost e BeatPulse): 0 spente, 1 di serie,
 /// fino a 2. A zero respirano soltanto, e nessun brano si scarica o si
 /// analizza per loro.
+/// L'onda del brano in ascolto per la barra di avanzamento (vedi
+/// services/waveform.dart), col brano a cui appartiene: null finche' non e'
+/// analizzato. La tiene aggiornata il player.
+final waveformProvider =
+    StateProvider<({String trackId, List<double> levels})?>((ref) => null);
+
 final spotsMusicProvider = NotifierProvider<SpotsMusicController, double>(
   SpotsMusicController.new,
 );
@@ -346,6 +352,12 @@ class SearchResult {
   final List<AlbumCard> artists;
   final List<AlbumCard> albums;
   final List<AlbumCard> playlists;
+
+  /// I video, in una categoria a parte (vedi SearchSections.videos).
+  final List<Track> videos;
+
+  /// Il risultato principale e' un video: i video vanno prima dei brani.
+  final bool topIsVideo;
   final bool isLoading;
   final String? error;
 
@@ -355,6 +367,8 @@ class SearchResult {
     this.artists = const [],
     this.albums = const [],
     this.playlists = const [],
+    this.videos = const [],
+    this.topIsVideo = false,
     this.isLoading = false,
     this.error,
   });
@@ -365,6 +379,7 @@ class SearchResult {
     List<AlbumCard>? artists,
     List<AlbumCard>? albums,
     List<AlbumCard>? playlists,
+    List<Track>? videos,
     bool? isLoading,
     String? error,
   }) {
@@ -374,6 +389,8 @@ class SearchResult {
       artists: artists ?? this.artists,
       albums: albums ?? this.albums,
       playlists: playlists ?? this.playlists,
+      videos: videos ?? this.videos,
+      topIsVideo: topIsVideo,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
     );
@@ -400,6 +417,8 @@ class SearchController extends Notifier<SearchResult> {
         artists: sections.artists,
         albums: sections.albums,
         playlists: sections.playlists,
+        videos: sections.videos,
+        topIsVideo: sections.topIsVideo,
       );
       // The YTM search API omits durations — fill them in the background
       // once they resolve (the list already shows immediately).

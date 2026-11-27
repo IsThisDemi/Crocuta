@@ -12,10 +12,11 @@ import '../models/lyrics.dart';
 import '../models/track.dart';
 import '../providers.dart';
 import 'automix.dart';
-import 'beat_analysis.dart' show beatGridVersion;
+import 'beat_analysis.dart' show BeatGrid, beatGridVersion;
 import 'beat_pulse.dart';
 import 'mix_sync.dart';
 import 'track_analyzer.dart';
+import 'waveform.dart';
 import 'karaoke.dart';
 import 'mini_player_window.dart';
 import 'mix_info.dart';
@@ -228,6 +229,65 @@ class PlayerController extends Notifier<PlayerState> {
           if (env != null && _pulseFor == id) {
             _setPulse(BeatPulse(grid, envelope: env));
           }
+        }),
+      );
+      return;
+    }
+    if (_pulseAskedFor == cur.id ||
+        state.position < const Duration(seconds: 3)) {
+      return;
+    }
+    _pulseAskedFor = cur.id;
+    unawaited(_ensureAnalyzed(cur));
+  }
+
+  String? _waveFor;
+  bool _waveFinal = false;
+  DateTime _waveLookedAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// Tiene [waveformProvider] sul brano in ascolto: l'onda della barra.
+  ///
+  /// Viene dall'analisi, che fanno AutoMix o le macchie a tempo di musica;
+  /// se non c'e' ancora la si chiede, dopo i primi secondi, come fa
+  /// [_watchPulse]. Finche' non arriva la barra mostra un'onda piatta.
+  void _watchWave() {
+    final cur = state.current;
+    if (cur == null) return;
+    final now = DateTime.now();
+    if (_waveFor != cur.id) {
+      _waveFor = cur.id;
+      _waveFinal = false;
+      _waveLookedAt = DateTime.fromMillisecondsSinceEpoch(0);
+      final shown = ref.read(waveformProvider);
+      if (shown != null && shown.trackId != cur.id) {
+        ref.read(waveformProvider.notifier).state = null;
+      }
+    }
+    if (_waveFinal) return;
+    if (now.difference(_waveLookedAt) < const Duration(seconds: 2)) return;
+    _waveLookedAt = now;
+    final service = ref.read(youtubeServiceProvider);
+    final grid = _analyzer.known(service.knownAudioId(cur.id), minVersion: 4);
+    if (grid != null) {
+      _waveFinal = true;
+      final levels = waveformOf(grid);
+      if (levels.isNotEmpty) {
+        ref.read(waveformProvider.notifier).state = (
+          trackId: cur.id,
+          levels: levels,
+        );
+      }
+      // Poi coi colpi, dall'inviluppo, che sta in un file suo.
+      final id = cur.id;
+      unawaited(
+        _analyzer.envelopeFor(service.knownAudioId(id)).then((env) {
+          if (env == null || _waveFor != id) return;
+          final full = waveformOf(grid, envelope: env);
+          if (full.isEmpty) return;
+          ref.read(waveformProvider.notifier).state = (
+            trackId: id,
+            levels: full,
+          );
         }),
       );
       return;
@@ -670,6 +730,26 @@ class PlayerController extends Notifier<PlayerState> {
     _lastStatsTrackId = q[index].id;
   }
 
+  /// Porta la coda al brano [index] senza farlo suonare: partira'
+  /// dall'inizio al prossimo play. Per i videoclip, che vanno avanti nella
+  /// coda mentre la musica e' ferma: chiuso il video, si riprende dal brano
+  /// di cui si stava guardando il video.
+  void cueAt(int index) {
+    final q = state.queue;
+    if (index < 0 || index >= q.length || index == state.currentIndex) return;
+    _abortCrossfade();
+    unawaited(_player.pause());
+    state = state.copyWith(
+      currentIndex: index,
+      position: Duration.zero,
+      duration: q[index].duration ?? Duration.zero,
+      isPlaying: false,
+      isLoading: false,
+    );
+    _pendingResume = Duration.zero;
+    _syncNowPlaying();
+  }
+
   /// Adds [track] to the end of the current queue.
   void addToQueue(Track track) {
     state = state.copyWith(queue: [...state.queue, track]);
@@ -715,6 +795,7 @@ class PlayerController extends Notifier<PlayerState> {
         _syncKaraoke(pos);
         _persist();
         _watchPulse();
+        _watchWave();
         // Il mix a tempo, se c'e' un piano: si occupa lui della transizione.
         if (_handleBeatMix(pos)) {
           _syncNowPlaying();
@@ -988,6 +1069,10 @@ class PlayerController extends Notifier<PlayerState> {
   @visibleForTesting
   BeatMixPlan? get debugBeatPlan => _beatPlan;
 
+  /// Per quale coppia "brano che suona > successivo" si e' gia' chiesta
+  /// l'analisi.
+  String? _gridsKey;
+
   /// Chiede l'analisi del brano che suona e del successivo, se su disco.
   void _requestGrids() {
     if (!state.automix) return;
@@ -995,6 +1080,7 @@ class PlayerController extends Notifier<PlayerState> {
     final service = ref.read(youtubeServiceProvider);
     // Il testo del successivo: da li' si sa quando comincia a cantare.
     final ni = _upcomingIndex();
+    _gridsKey = '${s.current?.id}>${ni < s.queue.length ? s.queue[ni].id : ''}';
     if (ni < s.queue.length) {
       final next = s.queue[ni];
       if (!_vocalsStartOf.containsKey(next.id)) {
@@ -1262,7 +1348,65 @@ class PlayerController extends Notifier<PlayerState> {
   /// suo primo battere; a un secondo e mezzo si arma un timer che lo fa
   /// partire sul battere esatto dell'uscente. Se qualcosa non e' pronto in
   /// tempo, si lascia al mix normale.
+  BeatMixPlan? _shownPlan;
+
+  /// Passa il piano del mix a [mixPlanProvider], per la barra: solo quando
+  /// cambia, non a ogni passo.
+  void _publishMixPlan(BeatMixPlan? plan) {
+    if (identical(plan, _shownPlan)) return;
+    _shownPlan = plan;
+    final s = state;
+    final cur = s.current;
+    final ni = _upcomingIndex();
+    final notifier = ref.read(mixPlanProvider.notifier);
+    if (plan == null || cur == null || ni >= s.queue.length) {
+      notifier.state = null;
+      return;
+    }
+    final next = s.queue[ni];
+    final service = ref.read(youtubeServiceProvider);
+    final a = _analyzer.known(service.knownAudioId(cur.id), minVersion: 4);
+    final b = _analyzer.known(service.knownAudioId(next.id), minVersion: 4);
+    const samples = 64;
+    final stems = plan.stems;
+    double? frac(double? sec) =>
+        sec == null || !sec.isFinite || plan.length <= 0
+        ? null
+        : (sec / plan.length).clamp(0.0, 1.0);
+    MixBands? bands(BeatGrid? g) {
+      final b = g == null ? null : bandsOf(g);
+      return b == null ? null : (low: b.low, mid: b.mid, high: b.high);
+    }
+
+    notifier.state = MixPlanInfo(
+      fromId: cur.id,
+      to: next,
+      outStart: plan.outStart,
+      length: plan.length,
+      inStart: plan.inStart,
+      inPerOut: plan.speed / plan.outSpeed,
+      toWave: b == null ? const [] : waveformOf(b),
+      waveRate: waveformRate,
+      fromBands: bands(a),
+      toBands: bands(b),
+      bandRate: BeatGrid.featureRate,
+      outStages: [
+        for (var i = 0; i <= samples; i++)
+          plan.stage(i / samples, incoming: false),
+      ],
+      inStages: [
+        for (var i = 0; i <= samples; i++)
+          plan.stage(i / samples, incoming: true),
+      ],
+      voiceOff: frac(stems?.duckAt),
+      voiceSwap: frac(stems?.exchangeAt),
+    );
+  }
+
   bool _handleBeatMix(Duration pos) {
+    if (!_crossfading && (pauseAtEndOfTrack || !state.automix)) {
+      _publishMixPlan(null);
+    }
     if (_crossfading || pauseAtEndOfTrack || !state.automix) return false;
     final s = state;
     // Verso la fine il successivo potrebbe essere comparso solo ora (la
@@ -1275,7 +1419,19 @@ class PlayerController extends Notifier<PlayerState> {
       _warmNextTrack(cur);
       _requestGrids();
     }
+    // Il successivo e' cambiato (messo in coda a mano, la coda
+    // riordinata) o AutoMix e' stato acceso a brano gia' partito: si
+    // prepara adesso, non nell'ultimo minuto. Senza, il piano — e il suo
+    // segno sulla barra — arrivava solo verso la fine.
+    final ni = _upcomingIndex();
+    if (cur != null &&
+        ni < s.queue.length &&
+        _gridsKey != '${cur.id}>${s.queue[ni].id}' &&
+        pos > const Duration(seconds: 3)) {
+      _requestGrids();
+    }
     final plan = _beatPlanNow();
+    _publishMixPlan(plan);
     if (plan == null) {
       if (cur != null &&
           _noPlanLoggedFor != cur.id &&
@@ -2166,6 +2322,106 @@ class PlayerController extends Notifier<PlayerState> {
     );
     _pendingResume = at;
     _syncNowPlaying();
+  }
+
+  /// Per le foto della barra (lib/dev/readme_shots.dart): l'onda del brano
+  /// in ascolto subito, e un mix verso il brano dopo — in arrivo, o in corso
+  /// a [progress] — senza suonare niente. Le onde sono quelle vere se i
+  /// brani sono analizzati.
+  void debugMixForShots({double? progress}) {
+    final s = state;
+    final cur = s.current;
+    if (cur == null || s.queue.length < 2) return;
+    final next = s.queue[1];
+    final service = ref.read(youtubeServiceProvider);
+    final a = _analyzer.known(service.knownAudioId(cur.id), minVersion: 4);
+    final b = _analyzer.known(service.knownAudioId(next.id), minVersion: 4);
+    debugPrint('readme: analisi ${a != null} ${b != null}');
+    // Senza analisi (la libreria finta delle foto) un'analisi inventata,
+    // per vedere la barra: strofe, ritornelli, un'intro e un finale.
+    BeatGrid fake(int seed, double seconds) {
+      final r = math.Random(seed);
+      final n = (seconds * BeatGrid.featureRate).round();
+      final f = <double>[];
+      for (var i = 0; i < n; i++) {
+        final u = i / n;
+        final edge = math.min(1.0, math.min(u * 14, (1 - u) * 10));
+        final chorus = (u * 7).floor().isOdd;
+        final drop = (u * 23).floor() % 9 == 4;
+        f
+          ..add(
+            drop
+                ? -40
+                : -24 + 14 * edge * (chorus ? 1 : 0.7) + 2 * r.nextDouble(),
+          )
+          ..add(-30 + 12 * edge * (chorus ? 1 : 0.8) + 2 * r.nextDouble())
+          ..add(-40 + 14 * edge * (chorus ? 1 : 0.6) + 2 * r.nextDouble())
+          ..add(18);
+      }
+      return BeatGrid(
+        bpm: 90,
+        firstBeat: 0,
+        downbeat: 0,
+        musicStart: 0,
+        musicEnd: seconds,
+        confidence: 1,
+        features: f,
+      );
+    }
+
+    final end = s.duration.inMilliseconds / 1000;
+    final ga = a ?? fake(1, end);
+    final gb = b ?? fake(2, 180);
+    ref.read(waveformProvider.notifier).state = (
+      trackId: cur.id,
+      levels: waveformOf(ga),
+    );
+    MixBands? bands(BeatGrid g) {
+      final x = bandsOf(g);
+      return x == null ? null : (low: x.low, mid: x.mid, high: x.high);
+    }
+
+    // Un mix quick come quelli veri: l'entrante senza bassi, poi i bassi
+    // passano; i medi dell'uscente si abbassano; la voce passa a meta'.
+    const samples = 64;
+    MixStage outAt(double t) => MixStage(
+      volume: t < 0.85 ? 1 : 1 - (t - 0.85) / 0.15,
+      low: t < 0.5 ? 0 : -26 * ((t - 0.5) / 0.1).clamp(0.0, 1.0),
+      mid: -10 * (t / 0.5).clamp(0.0, 1.0),
+    );
+    MixStage inAt(double t) => MixStage(
+      volume: (t / 0.2).clamp(0.0, 1.0),
+      low: t < 0.5 ? -26 : -26 + 26 * ((t - 0.5) / 0.1).clamp(0.0, 1.0),
+      mid: -6 + 6 * t,
+    );
+    ref.read(mixPlanProvider.notifier).state = MixPlanInfo(
+      fromId: cur.id,
+      to: next,
+      outStart: math.max(0, end - 34),
+      length: 24,
+      inStart: 4,
+      inPerOut: 1,
+      toWave: waveformOf(gb),
+      waveRate: waveformRate,
+      fromBands: bands(ga),
+      toBands: bands(gb),
+      bandRate: BeatGrid.featureRate,
+      outStages: [for (var i = 0; i <= samples; i++) outAt(i / samples)],
+      inStages: [for (var i = 0; i <= samples; i++) inAt(i / samples)],
+      voiceOff: 0.55,
+      voiceSwap: 0.5,
+    );
+    if (progress == null) {
+      ref.read(mixInfoProvider.notifier).state = null;
+      state = state.copyWith(mixing: false);
+      return;
+    }
+    ref.read(mixInfoProvider.notifier).state = MixInfo(
+      from: cur,
+      to: next,
+      progress: progress,
+    );
+    state = state.copyWith(mixing: true);
   }
 
   /// Opens the restored track and picks up at the saved position.

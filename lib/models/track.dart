@@ -28,6 +28,12 @@ class Track {
   /// e riformattarla a mano vorrebbe dire rifare quel lavoro peggio.
   final String? plays;
 
+  /// Un video e non una canzone: un remix, un pezzo uscito solo su
+  /// YouTube, trovato fra i video della ricerca. Si ascolta e si salva come
+  /// ogni altro brano; in piu' lo si puo' guardare, ed e' lui stesso il suo
+  /// video (vedi YouTubeService.musicVideoFor).
+  final bool isVideo;
+
   const Track({
     required this.id,
     required this.title,
@@ -40,6 +46,7 @@ class Track {
     this.albumName,
     this.plays,
     this.isExplicit = false,
+    this.isVideo = false,
   });
 
   /// Le riproduzioni senza la parola finale: "3,8 Mln riproduzioni" ->
@@ -82,6 +89,7 @@ class Track {
       albumId: fresh.albumId ?? albumId,
       albumName: fresh.albumName ?? albumName,
       plays: fresh.plays ?? plays,
+      isVideo: fresh.isVideo || isVideo,
     );
   }
 
@@ -106,6 +114,7 @@ class Track {
     String? plays,
     bool? isExplicit,
     String? albumName,
+    bool? isVideo,
   }) {
     return Track(
       id: id ?? this.id,
@@ -119,6 +128,7 @@ class Track {
       albumName: albumName ?? this.albumName,
       plays: plays ?? this.plays,
       isExplicit: isExplicit ?? this.isExplicit,
+      isVideo: isVideo ?? this.isVideo,
     );
   }
 
@@ -134,6 +144,7 @@ class Track {
     'albumName': albumName,
     'plays': plays,
     'isExplicit': isExplicit,
+    if (isVideo) 'isVideo': true,
   };
 
   factory Track.fromJson(Map<String, dynamic> json) => Track(
@@ -154,6 +165,7 @@ class Track {
     albumName: json['albumName'] as String?,
     plays: json['plays'] as String?,
     isExplicit: json['isExplicit'] as bool? ?? false,
+    isVideo: json['isVideo'] as bool? ?? false,
   );
 
   @override

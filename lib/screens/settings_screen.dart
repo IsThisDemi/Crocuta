@@ -18,6 +18,7 @@ import '../widgets/sub_page.dart';
 import '../widgets/toast.dart';
 import 'spotify_import_screen.dart';
 import '../design/spot.dart';
+import '../widgets/spot_slider.dart';
 
 /// Le impostazioni, in un posto solo.
 ///
@@ -289,11 +290,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       : '${(spotsMusic * 100).round()}%',
                   trailing: SizedBox(
                     width: 150,
-                    child: Slider(
+                    child: SpotSlider(
+                      seed: 'spots-music',
+                      height: 32,
                       value: spotsMusic,
                       max: SpotsMusicController.max,
                       divisions: 8,
-                      activeColor: context.colors.accent,
+                      semanticLabel: 'Spots follow the music',
                       onChanged: (v) => ref
                           .read(spotsMusicProvider.notifier)
                           .set(v, persist: false),

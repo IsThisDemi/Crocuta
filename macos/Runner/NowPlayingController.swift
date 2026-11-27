@@ -85,6 +85,11 @@ class NowPlayingController: NSObject {
   // MARK: - Method channel
 
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    // Le prove nascoste non toccano "In riproduzione" della Crocuta vera.
+    if CrocutaDebug.hiddenWindow {
+      result(nil)
+      return
+    }
     switch call.method {
     case "update":
       guard let args = call.arguments as? [String: Any] else {

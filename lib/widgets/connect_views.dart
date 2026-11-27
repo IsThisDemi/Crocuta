@@ -16,6 +16,7 @@ import 'artwork_backdrop.dart';
 import 'content_width.dart';
 import 'liquid.dart';
 import 'thumbnail.dart';
+import 'spot_slider.dart';
 import 'toast.dart';
 
 IconData _iconOf(ConnectDevice d) => switch (d.platform) {
@@ -383,31 +384,23 @@ class _RemoteScreenState extends ConsumerState<RemoteScreen> {
                   style: context.texts.bodyLarge?.copyWith(color: muted),
                 ),
                 const SizedBox(height: 12),
-                SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 4,
-                    activeTrackColor: accent,
-                    inactiveTrackColor: Colors.white.withValues(alpha: 0.22),
-                    thumbColor: Colors.white,
-                    overlayShape: SliderComponentShape.noOverlay,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 7,
-                    ),
+                SpotSlider(
+                  seed: 'seek',
+                  style: SpotSliderStyle.wave,
+                  value: (_seeking ?? pos.inMilliseconds.toDouble()).clamp(
+                    0,
+                    total <= 0 ? 1 : total,
                   ),
-                  child: Slider(
-                    value: (_seeking ?? pos.inMilliseconds.toDouble()).clamp(
-                      0,
-                      total <= 0 ? 1 : total,
-                    ),
-                    max: total <= 0 ? 1 : total,
-                    onChanged: total <= 0
-                        ? null
-                        : (v) => setState(() => _seeking = v),
-                    onChangeEnd: (v) {
-                      _remote.command('seek', {'ms': v.round()});
-                      setState(() => _seeking = null);
-                    },
-                  ),
+                  max: total <= 0 ? 1 : total,
+                  label: (v) => _fmt(Duration(milliseconds: v.round())),
+                  semanticLabel: 'Position',
+                  onChanged: total <= 0
+                      ? null
+                      : (v) => setState(() => _seeking = v),
+                  onChangeEnd: (v) {
+                    _remote.command('seek', {'ms': v.round()});
+                    setState(() => _seeking = null);
+                  },
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -438,29 +431,21 @@ class _RemoteScreenState extends ConsumerState<RemoteScreen> {
                   ],
                 ),
                 const SizedBox(height: 14),
-                // Il volume, sottile come quello di Apple Music.
+                // Il volume, la stessa barra spenta finche' non la si tocca.
                 Row(
                   children: [
                     Icon(Icons.volume_mute_rounded, size: 18, color: muted),
                     Expanded(
-                      child: SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          trackHeight: 3,
-                          activeTrackColor: Colors.white.withValues(
-                            alpha: 0.85,
-                          ),
-                          inactiveTrackColor: Colors.white.withValues(
-                            alpha: 0.2,
-                          ),
-                          thumbColor: Colors.white,
-                          overlayShape: SliderComponentShape.noOverlay,
-                          thumbShape: const RoundSliderThumbShape(
-                            enabledThumbRadius: 5,
-                          ),
-                        ),
-                        child: Slider(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: SpotSlider(
+                          seed: 'volume',
                           value: (_volume ?? s.volume).clamp(0, 100),
                           max: 100,
+                          headAtRest: false,
+                          idleColor: context.colors.accentMuted,
+                          label: (v) => '${v.round()}%',
+                          semanticLabel: 'Volume',
                           onChanged: (v) {
                             setState(() => _volume = v);
                             _remote.command('volume', {'v': v});

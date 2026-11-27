@@ -6,6 +6,7 @@ import '../design/app_theme.dart';
 import '../models/track.dart';
 import '../navigation.dart';
 import '../providers.dart';
+import '../screens/video_screen.dart';
 import 'glass_surfaces.dart';
 import 'lifted_menu.dart';
 import 'thumbnail.dart';
@@ -53,6 +54,14 @@ List<TrackMenuAction> buildTrackMenuActions(
   final nav = Navigator.of(context, rootNavigator: false);
 
   return [
+    // Un video della ricerca si ascolta come una canzone; guardarlo e' la
+    // prima cosa che ci si aspetta di trovare qui.
+    if (track.isVideo)
+      TrackMenuAction(
+        icon: Icons.smart_display_rounded,
+        label: 'Watch video',
+        onSelected: () => VideoScreen.open(nav.context, track),
+      ),
     TrackMenuAction(
       icon: Icons.radio_rounded,
       label: 'Start radio',

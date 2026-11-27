@@ -82,7 +82,7 @@ final artworkAccentProvider = FutureProvider.autoDispose.family<Color, String>((
 /// image rather than from whatever happens to be playing, so this is scoped
 /// per page instead of being global. It sits below `MaterialApp`: putting it
 /// above would rebuild every route on each track change.
-class AccentScope extends ConsumerWidget {
+class AccentScope extends ConsumerStatefulWidget {
   final String? artworkUrl;
   final Widget child;
 
@@ -98,15 +98,32 @@ class AccentScope extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final url = artworkUrl;
-    final accent = color != null
-        ? color!
+  ConsumerState<AccentScope> createState() => _AccentScopeState();
+}
+
+class _AccentScopeState extends ConsumerState<AccentScope> {
+  /// L'ultimo colore vero. Mentre la copertina nuova si legge si resta su
+  /// di lui: ripiegare sul viola di marca faceva lampeggiare di viola
+  /// tutta l'app a ogni cambio di brano.
+  Color? _last;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = widget.artworkUrl;
+    final Color? found = widget.color != null
+        ? widget.color!
         : (url == null || url.isEmpty)
-        ? AppColors.irisBright
-        : ref
-              .watch(artworkAccentProvider(url))
-              .maybeWhen(data: (c) => c, orElse: () => AppColors.irisBright);
+        ? null
+        : ref.watch(artworkAccentProvider(url)).valueOrNull;
+    if (found != null) _last = found;
+    // Prima di averne uno (una pagina appena aperta): quello di chi sta
+    // sotto, il colore del brano in ascolto; il viola solo se non c'e'
+    // nient'altro.
+    final accent =
+        _last ??
+        Theme.of(context).extension<AppColorsExt>()?.accent ??
+        AppColors.irisBright;
+    final child = widget.child;
 
     return TweenAnimationBuilder<Color?>(
       tween: ColorTween(end: accent),

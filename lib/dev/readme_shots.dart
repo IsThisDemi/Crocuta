@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -11,11 +13,14 @@ import '../design/motion.dart';
 import '../models/track.dart';
 import '../navigation.dart';
 import '../providers.dart';
+import '../services/mix_info.dart';
 import '../screens/browse_screens.dart';
 import '../screens/eq_screen.dart';
 import '../screens/now_playing_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/stats_screen.dart';
+import '../screens/video_screen.dart';
+import '../widgets/spot_slider.dart';
 import '../widgets/word_tab_bar.dart';
 
 /// Le foto del README, fatte dall'app stessa.
@@ -250,6 +255,319 @@ Future<void> runReadmeShots(WidgetRef ref) async {
     return;
   }
 
+  // Non per il README: i video nella ricerca e la sala del videoclip. La
+  // misura della finestra la decide chi lancia l'app (vedi
+  // CROCUTA_WINDOW_SIZE in MainFlutterWindow.swift): larga e' la sala, a
+  // misura di telefono la colonna.
+  if (readmeShotsSet == 'video') {
+    final search = ref.read(searchProvider.notifier);
+    select(NavTabController.search);
+    await search.search('ninja gaiden deko itsoktocry');
+    await settle(7000);
+    await shot('v_search_top');
+    final videos = ref.read(searchProvider).videos;
+    await search.search('$readmeShotsArtist $readmeShotsTrack');
+    await settle(7000);
+    await shot('v_search_after');
+    if (videos.isEmpty) {
+      debugPrint('readme: nessun video trovato');
+      debugPrint('readme: fatto');
+      return;
+    }
+    // Il primo che si apre davvero: senza l'accesso a YouTube quelli con
+    // un limite d'eta' (il videoclip ufficiale, qui) non si aprono.
+    final service = ref.read(youtubeServiceProvider);
+    var pick = videos.first;
+    for (final v in videos.take(5)) {
+      if (await service.resolveAudio(v.id) != null) {
+        pick = v;
+        break;
+      }
+    }
+    debugPrint('readme: video ${pick.id} ${pick.title}');
+    // Uno che non si apre: la pagina dev'essere il player, copertina e
+    // comandi, senza scritte.
+    if (pick.id != videos.first.id) {
+      unawaited(
+        VideoScreen.open(rootNavigatorKey.currentContext!, videos.first),
+      );
+      await settle(9000);
+      await shot('v_missing');
+      root().pop();
+      await settle(1000);
+    }
+    // Il video come brano in ascolto, seguito dalla coda di prima: cosi' la
+    // sala ha un "dopo" da proporre.
+    player.debugStageForShots(pick, Duration.zero);
+    await settle(1000);
+    unawaited(VideoScreen.open(rootNavigatorKey.currentContext!, pick));
+    await settle(1200);
+    await shot('v_loading');
+    await settle(12000);
+    await shot('v_full');
+    // Un mouse che passa: i comandi tornano.
+    final g = GestureBinding.instance;
+    final size = rootNavigatorKey.currentContext!.size!;
+    final at = Offset(size.width / 2, size.height / 2);
+    g.handlePointerEvent(
+      PointerAddedEvent(
+        pointer: 970,
+        position: at,
+        kind: PointerDeviceKind.mouse,
+      ),
+    );
+    g.handlePointerEvent(
+      PointerHoverEvent(
+        pointer: 970,
+        position: at + const Offset(4, 4),
+        kind: PointerDeviceKind.mouse,
+      ),
+    );
+    await settle(1200);
+    await shot('v_chrome');
+    g.handlePointerEvent(
+      PointerRemovedEvent(
+        pointer: 970,
+        position: at,
+        kind: PointerDeviceKind.mouse,
+      ),
+    );
+    // Alla fine: il prossimo, col conto alla rovescia.
+    final seek = VideoScreen.debugSeek;
+    if (seek != null) {
+      final total = pick.duration ?? const Duration(minutes: 2);
+      await seek(total - const Duration(seconds: 2));
+      await settle(5000);
+      await shot('v_end');
+    }
+    root().pop();
+    await settle(800);
+    debugPrint('readme: fatto');
+    return;
+  }
+
+  // Non per il README: la barra di avanzamento presa col mouse mentre il
+  // brano suona (muto), piu' volte, per vedere se a volte non risponde.
+  if (readmeShotsSet == 'seek') {
+    final g = GestureBinding.instance;
+    await player.setVolume(0);
+    await player.resumeSession();
+    await settle(8000);
+    root().push(PlayerRoute<void>(builder: (_) => const NowPlayingScreen()));
+    await settle(3000);
+    Rect? seekRect() {
+      Rect? hit;
+      for (final e in _findAll<SpotSlider>()) {
+        if ((e.widget as SpotSlider).seed != 'seek') continue;
+        final box = e.renderObject;
+        if (box is! RenderBox || !box.attached) continue;
+        hit = box.localToGlobal(Offset.zero) & box.size;
+      }
+      return hit;
+    }
+
+    var id = 1500;
+    const mouse = PointerDeviceKind.mouse;
+    for (var k = 0; k < 8; k++) {
+      final r = seekRect();
+      if (r == null) {
+        debugPrint('readme: seek nessuna barra');
+        break;
+      }
+      final before = ref.read(playerProvider).position;
+      final to = k.isEven ? 0.25 + 0.05 * k : 0.7 - 0.05 * k;
+      final a = Offset(r.left + r.width * (to - 0.1), r.center.dy);
+      final b = Offset(r.left + r.width * to, r.center.dy);
+      id++;
+      g.handlePointerEvent(
+        PointerAddedEvent(pointer: id, position: a, kind: mouse),
+      );
+      g.handlePointerEvent(
+        PointerHoverEvent(pointer: id, position: a, kind: mouse),
+      );
+      g.handlePointerEvent(
+        PointerDownEvent(
+          pointer: id,
+          position: a,
+          kind: mouse,
+          buttons: kPrimaryMouseButton,
+        ),
+      );
+      if (k % 3 != 2) {
+        var last = a;
+        for (var i = 1; i <= 8; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          final q = Offset.lerp(a, b, i / 8)!;
+          g.handlePointerEvent(
+            PointerMoveEvent(
+              pointer: id,
+              position: q,
+              delta: q - last,
+              kind: mouse,
+              buttons: kPrimaryMouseButton,
+            ),
+          );
+          last = q;
+        }
+      }
+      final at = k % 3 != 2 ? b : a;
+      g.handlePointerEvent(
+        PointerUpEvent(pointer: id, position: at, kind: mouse),
+      );
+      await settle(1500);
+      final after = ref.read(playerProvider).position;
+      final dur = ref.read(playerProvider).duration;
+      debugPrint(
+        'readme: seek $k ${k % 3 != 2 ? 'trascina' : 'clic'} a '
+        '${(at.dx - r.left) / r.width} -> prima $before dopo $after di $dur '
+        'mixing ${ref.read(playerProvider).mixing}',
+      );
+      g.handlePointerEvent(
+        PointerRemovedEvent(pointer: id, position: at, kind: mouse),
+      );
+      await settle(2500);
+    }
+    await player.toggle();
+    root().pop();
+    debugPrint('readme: fatto');
+    return;
+  }
+
+  // Non per il README: le barre (avanzamento e volume) a riposo, col mouse
+  // sopra e tenute col dito, con eventi di puntatore finti.
+  if (readmeShotsSet == 'sliders') {
+    final g = GestureBinding.instance;
+    Rect? rectOf(String seed) {
+      // L'ultima: quella della pagina in cima (la tana sotto ha la sua).
+      Rect? hit;
+      for (final e in _findAll<SpotSlider>()) {
+        if ((e.widget as SpotSlider).seed != seed) continue;
+        final box = e.renderObject;
+        if (box is! RenderBox || !box.attached) continue;
+        hit = box.localToGlobal(Offset.zero) & box.size;
+      }
+      debugPrint('readme: barra $seed $hit');
+      return hit;
+    }
+
+    var id = 1200;
+    Future<void> hold(Rect r, double from, double to, String name) async {
+      id++;
+      final a = Offset(r.left + r.width * from, r.center.dy);
+      final b = Offset(r.left + r.width * to, r.center.dy);
+      const touch = PointerDeviceKind.touch;
+      g.handlePointerEvent(
+        PointerAddedEvent(pointer: id, position: a, kind: touch),
+      );
+      g.handlePointerEvent(
+        PointerDownEvent(pointer: id, position: a, kind: touch),
+      );
+      // Col delta: e' lui che il riconoscitore del trascinamento somma.
+      var last = a;
+      for (var i = 1; i <= 10; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 25));
+        final q = Offset.lerp(a, b, i / 10)!;
+        g.handlePointerEvent(
+          PointerMoveEvent(
+            pointer: id,
+            position: q,
+            delta: q - last,
+            kind: touch,
+          ),
+        );
+        last = q;
+      }
+      await settle(600);
+      await shot(name);
+      g.handlePointerEvent(
+        PointerUpEvent(pointer: id, position: b, kind: touch),
+      );
+      await settle(600);
+    }
+
+    Future<void> hover(Rect r, String name) async {
+      id++;
+      final at = Offset(r.left + r.width * 0.3, r.center.dy);
+      const mouse = PointerDeviceKind.mouse;
+      g.handlePointerEvent(
+        PointerAddedEvent(pointer: id, position: at, kind: mouse),
+      );
+      g.handlePointerEvent(
+        PointerHoverEvent(pointer: id, position: at, kind: mouse),
+      );
+      await settle(700);
+      await shot(name);
+      g.handlePointerEvent(
+        PointerRemovedEvent(pointer: id, position: at, kind: mouse),
+      );
+      await settle(400);
+    }
+
+    final volume = ref.read(playerProvider).volume;
+    root().push(PlayerRoute<void>(builder: (_) => const NowPlayingScreen()));
+    await settle(3500);
+    await shot('s_flat');
+    player.debugMixForShots();
+    ref.read(mixPlanProvider.notifier).state = null;
+    await settle(1500);
+    await shot('s_rest');
+    final seek = rectOf('seek');
+    final vol = rectOf('volume');
+    if (seek != null) {
+      await hover(seek, 's_hover_seek');
+      final f =
+          ref.read(playerProvider).position.inMilliseconds /
+          math.max(1, ref.read(playerProvider).duration.inMilliseconds);
+      await hold(seek, f, f + 0.15, 's_drag_seek');
+      await hold(seek, 0.9, 0.99, 's_drag_end');
+    }
+    if (vol != null) {
+      await hover(vol, 's_hover_volume');
+      await hold(
+        vol,
+        math.min(0.97, volume / 100),
+        math.min(0.97, volume / 100) - 0.25,
+        's_drag_volume',
+      );
+      // Il volume si salva: si rimette quello di prima.
+      ref.read(playerProvider.notifier).setVolume(volume);
+    }
+    // Il mix: prima il segno di dove partira', poi in corso. Il brano
+    // torna dov'era: le prese di prima l'hanno spostato.
+    if (star != null) player.debugStageForShots(star, at);
+    player.debugMixForShots();
+    await settle(1500);
+    await shot('s_mix_upcoming');
+    for (final p in [0.2, 0.5, 0.8]) {
+      player.debugMixForShots(progress: p);
+      await settle(1200);
+      await shot('s_mix_${(p * 100).round()}');
+    }
+    player.debugMixForShots(progress: null);
+    ref.read(mixPlanProvider.notifier).state = null;
+    root().pop();
+    await settle(900);
+
+    select(NavTabController.library);
+    await settle(800);
+    tab(
+      NavTabController.library,
+    ).push(MaterialPageRoute<void>(builder: (_) => const SettingsScreen()));
+    await settle(2500);
+    final el = _findAll<SpotSlider>().firstOrNull;
+    if (el != null) {
+      await Scrollable.ensureVisible(el, alignment: 0.5);
+      await settle(900);
+      await shot('s_settings');
+    }
+    tab(NavTabController.library).pop();
+    select(NavTabController.home);
+    await settle(1500);
+    await shot('s_home');
+    debugPrint('readme: fatto');
+    return;
+  }
+
   if (readmeShotsSet == 'wide') {
     select(NavTabController.home);
     await settle();
@@ -301,6 +619,18 @@ Future<void> runReadmeShots(WidgetRef ref) async {
     await settle(900);
   }
   debugPrint('readme: fatto');
+}
+
+/// Tutti gli elementi dell'albero con un widget di tipo [T].
+List<Element> _findAll<T extends Widget>() {
+  final hits = <Element>[];
+  void visit(Element e) {
+    if (e.widget is T) hits.add(e);
+    e.visitChildElements(visit);
+  }
+
+  WidgetsBinding.instance.rootElement?.visitChildElements(visit);
+  return hits;
 }
 
 /// Il primo elemento dell'albero con un widget di tipo [T].

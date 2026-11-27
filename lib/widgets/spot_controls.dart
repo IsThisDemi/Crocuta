@@ -102,6 +102,15 @@ class SpotCover extends ConsumerWidget {
   /// loop e i gesti. Viene ritagliato a macchia qui.
   final Widget? child;
 
+  /// Larghezza su altezza: 1 per una copertina, 16/9 per un videoclip.
+  /// [size] e' l'altezza; i satelliti stanno attorno al bordo destro e in
+  /// basso a sinistra come sempre, misurati sull'altezza.
+  final double aspect;
+
+  /// Quanto si allontana dal cerchio (vedi [SpotBorder.wobble]). Un video
+  /// la vuole piu' tonda: i lobi taglierebbero l'immagine.
+  final double wobble;
+
   const SpotCover({
     super.key,
     required this.url,
@@ -109,6 +118,8 @@ class SpotCover extends ConsumerWidget {
     this.hiRes = false,
     this.satellites = 4,
     this.child,
+    this.aspect = 1,
+    this.wobble = 1,
   });
 
   /// Centro e diametro di ogni satellite, in frazioni del lato.
@@ -139,9 +150,11 @@ class SpotCover extends ConsumerWidget {
 
     final jitter = (spotSeed(url) % 7 - 3) / 100;
 
+    final width = size * aspect;
     return Builder(
-      builder: (context) => SizedBox.square(
-        dimension: size,
+      builder: (context) => SizedBox(
+        width: width,
+        height: size,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -151,7 +164,12 @@ class SpotCover extends ConsumerWidget {
               // vicino alla copertina; e intanto si deformano piu' svelti
               // di lei: le gocce piccole si muovono piu' delle grandi.
               Positioned(
-                left: size * (_layout[i].dx + jitter) - size * _layout[i].d / 2,
+                // Quelli a destra seguono il bordo destro, quello in basso
+                // a sinistra il sinistro.
+                left:
+                    (_layout[i].dx > 0.5 ? width - size : 0) +
+                    size * (_layout[i].dx + jitter) -
+                    size * _layout[i].d / 2,
                 top: size * (_layout[i].dy - jitter) - size * _layout[i].d / 2,
                 width: size * _layout[i].d,
                 height: size * _layout[i].d,
@@ -194,9 +212,10 @@ class SpotCover extends ConsumerWidget {
               ),
             Positioned.fill(
               child: child == null
-                  ? SpotThumbnail(url: url, hiRes: hiRes)
+                  ? SpotThumbnail(url: url, hiRes: hiRes, wobble: wobble)
                   : Spot(
                       seed: url,
+                      wobble: wobble,
                       rim: Colors.white.withValues(alpha: 0.08),
                       child: child!,
                     ),
